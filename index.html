@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>徳島文理大学男子サッカー部 | 公式サイト（リニューアル版）</title>
+<meta name="description" content="徳島文理大学男子サッカー部の公式サイト。2025年より四国大学サッカーリーグ2部に参戦。ニュース、試合日程、選手・スタッフ紹介はこちらから。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">本文へスキップ</a>
+
+<!-- ===== HEADER =====
+     クラブ名・SNSリンクなどは data.js の siteData から自動反映されます -->
+<header class="site-header" id="top">
+  <div class="header-inner">
+    <a href="#top" class="logo" aria-label="徳島文理大学男子サッカー部 トップへ">
+      <span class="logo-mark js-logo-initial" aria-hidden="true">B</span>
+      <span class="logo-text">
+        <span class="logo-jp js-club-name-jp">徳島文理大学男子サッカー部</span>
+        <span class="logo-en js-club-name-en">BUNRI UNIV. SOCCER CLUB</span>
+      </span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="primaryNav" aria-label="メニューを開く">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="primary-nav" id="primaryNav">
+      <ul>
+        <li><a href="#news" class="nav-link">News</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#schedule" class="nav-link">Schedule</a></li>
+        <li><a href="#members" class="nav-link">Members</a></li>
+        <li><a href="#faq" class="nav-link">Q&amp;A</a></li>
+        <li><a href="#sponsors" class="nav-link">Sponsors</a></li>
+      </ul>
+      <a href="#" target="_blank" rel="noopener" class="btn btn-cta nav-cta js-instagram-link">体験・入部はこちら</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ===== HERO =====
+       見出し・写真・数字は data.js の heroData から自動反映されます -->
+  <section class="hero" aria-label="トップビジュアル">
+    <div class="hero-arc" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <p class="eyebrow" id="heroEyebrow"></p>
+      <h1 class="hero-copy" id="heroHeadline"></h1>
+      <p class="hero-sub" id="heroSub"></p>
+      <div class="hero-actions">
+        <a href="#" target="_blank" rel="noopener" class="btn btn-cta js-instagram-link" id="heroCta">体験・入部はこちら</a>
+        <a href="#about" class="btn btn-ghost">部の活動を見る</a>
+      </div>
+      <dl class="hero-stats" id="heroStats">
+        <!-- data.js の heroData.stats がここに自動で表示されます -->
+      </dl>
+    </div>
+    <!-- heroData.photo に画像パスがあれば、ここに自動で写真が表示されます。
+         無ければ下のダミー表示のままになります。 -->
+    <div class="hero-photo" id="heroPhoto">
+      <div class="photo-placeholder">
+        <svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
+          <circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M32 13 L40 19 L37 29 L27 29 L24 19 Z" fill="currentColor"/>
+        </svg>
+        <span>TEAM PHOTO</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== NEWS =====
+       中身は data.js の newsData を JavaScript で自動的に流し込みます。 -->
+  <section class="section news-section" id="news">
+    <div class="section-inner">
+      <div class="section-head">
+        <h2 class="section-title"><span class="section-title-en">News</span><span class="section-title-jp">ニュース・試合速報</span></h2>
+        <a href="news.html" class="section-link">更新一覧を詳しく見る →</a>
+      </div>
+      <p class="sync-warning" id="newsSyncWarning" hidden>⚠ 最新の情報を読み込めませんでした。表示中の内容は最新でない可能性があります。</p>
+
+      <div class="news-grid" id="newsGrid">
+        <!-- data.js の newsData がここに自動で表示されます -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT & SCHEDULE =====
+       中身は data.js の aboutData を JavaScript で自動的に流し込みます。 -->
+  <section class="section about-section" id="about">
+    <div class="section-inner">
+      <h2 class="section-title"><span class="section-title-en">About</span><span class="section-title-jp">部の紹介・練習日時</span></h2>
+
+      <div class="about-grid">
+        <div class="about-lead">
+          <p class="about-slogan" id="aboutSlogan"></p>
+          <p class="about-text" id="aboutText"></p>
+        </div>
+
+        <dl class="about-facts" id="aboutFacts">
+          <!-- data.js の aboutData.facts がここに自動で表示されます -->
+        </dl>
+      </div>
+
+      <div class="year-schedule">
+        <h3 class="sub-title">年間スケジュール</h3>
+        <div class="year-schedule-grid" id="yearScheduleGrid">
+          <!-- data.js の aboutData.yearSchedule がここに自動で表示されます -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCHEDULE / RESULTS =====
+       中身は data.js の scheduleData を JavaScript で自動的に流し込みます。 -->
+  <section class="section results-section" id="schedule">
+    <div class="section-inner">
+      <h2 class="section-title section-title--light"><span class="section-title-en">Schedule</span><span class="section-title-jp">試合日程・結果</span></h2>
+      <p class="sync-warning sync-warning--light" id="scheduleSyncWarning" hidden>⚠ 最新の情報を読み込めませんでした。表示中の内容は最新でない可能性があります。</p>
+
+      <div class="scoreboard" role="table" aria-label="2026シーズン 四国大学サッカーリーグ2部の試合日程">
+        <div class="scoreboard-row scoreboard-head" role="row">
+          <span role="columnheader">日付</span>
+          <span role="columnheader">大会</span>
+          <span role="columnheader">対戦相手・詳細</span>
+          <span role="columnheader">結果</span>
+        </div>
+        <div id="scheduleBody">
+          <!-- data.js の scheduleData がここに自動で表示されます -->
+        </div>
+      </div>
+      <p class="results-note">
+        ※試合結果の詳細は公式Instagram（<a href="#" target="_blank" rel="noopener" class="js-instagram-link"><span class="js-instagram-handle">@bunri.uni</span></a>）で随時発信しています。
+      </p>
+    </div>
+  </section>
+
+  <!-- ===== MEMBERS =====
+       監督・コーチのコメントは data.js の staffData、
+       選手カードは data.js の playersData を JavaScript で自動的に流し込みます。 -->
+  <section class="section members-section" id="members">
+    <div class="section-inner">
+      <h2 class="section-title"><span class="section-title-en">Members</span><span class="section-title-jp">選手・指導者紹介</span></h2>
+
+      <div class="staff-comments" id="staffComments">
+        <!-- data.js の staffData がここに自動で表示されます -->
+      </div>
+
+      <div class="filter-bar" role="group" aria-label="選手フィルター">
+        <button class="filter-btn is-active" data-filter="all">全員</button>
+        <button class="filter-btn" data-filter="4年">4年生</button>
+        <button class="filter-btn" data-filter="3年">3年生</button>
+        <button class="filter-btn" data-filter="2年">2年生</button>
+        <button class="filter-btn" data-filter="1年">1年生</button>
+        <button class="filter-btn" data-filter="スタッフ">スタッフ</button>
+      </div>
+
+      <div class="player-grid" id="playerGrid">
+        <!-- data.js の playersData がここに自動で表示されます -->
+      </div>
+      <p class="filter-empty" id="filterEmpty" hidden>該当する部員がいません。</p>
+    </div>
+  </section>
+
+  <!-- ===== FAQ =====
+       質問・回答は data.js の faqData を JavaScript で自動的に流し込みます。 -->
+  <section class="section faq-section" id="faq">
+    <div class="section-inner section-inner--narrow">
+      <h2 class="section-title"><span class="section-title-en">Q&amp;A</span><span class="section-title-jp">新入生向けよくある質問</span></h2>
+
+      <div class="accordion" id="faqAccordion">
+        <!-- data.js の faqData がここに自動で表示されます -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SPONSORS =====
+       企業紹介は data.js の sponsorsData、支援案内は supportData から
+       JavaScript で自動的に流し込みます。 -->
+  <section class="section sponsors-section" id="sponsors">
+    <div class="section-inner">
+      <h2 class="section-title"><span class="section-title-en">Sponsors</span><span class="section-title-jp">ご支援いただいている企業様</span></h2>
+      <p class="sponsors-lead">日頃より徳島文理大学男子サッカー部の活動をご支援いただいている企業様です。</p>
+
+      <ul class="sponsor-grid" id="sponsorGrid">
+        <!-- data.js の sponsorsData がここに自動で表示されます -->
+      </ul>
+
+      <div class="sponsor-support">
+        <h3 class="sub-title">企業様向けご支援案内</h3>
+        <div class="support-grid" id="supportGrid">
+          <!-- data.js の supportData がここに自動で表示されます -->
+        </div>
+        <p class="support-contact">
+          お申し込み・お問い合わせは
+          <a href="#" class="js-sponsor-email">tokushimabunri.univ.soccer@gmail.com</a>
+          までご連絡ください。
+        </p>
+        <a href="#contact" class="btn btn-cta support-cta">企業様のお問い合わせはこちら</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT =====
+       企業様・スポンサー様専用のお問い合わせフォームです。
+       体験練習・入部のご相談は、公式Instagramへ直接ご連絡いただく形にしています。 -->
+  <section class="section contact-section" id="contact">
+    <div class="section-inner section-inner--narrow">
+      <h2 class="section-title"><span class="section-title-en">Contact</span><span class="section-title-jp">企業様・スポンサー様お問い合わせ</span></h2>
+      <p class="contact-lead">協賛・寄付など、企業様からのご支援に関するお問い合わせは下記フォームよりお願いいたします。担当者より折り返しご連絡いたします。</p>
+
+      <div class="contact-alt">
+        <p><strong>メールでのお問い合わせはこちら</strong></p>
+        <div class="contact-alt-links">
+          <a href="#" class="js-sponsor-email">tokushimabunri.univ.soccer@gmail.com</a>
+        </div>
+      </div>
+
+      <a href="#" id="gformButton" target="_blank" rel="noopener" class="btn btn-cta gform-button">Googleフォームで問い合わせる</a>
+
+      <p class="contact-note">※体験練習・入部に関するご相談は、フォームではなく公式Instagram（<a href="#" target="_blank" rel="noopener" class="js-instagram-link"><span class="js-instagram-handle">@bunri.uni</span></a>）のDM、または活動日にグラウンドへ直接お越しください。</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== FOOTER =====
+     クラブ名・SNSリンク・著作権表記は data.js の siteData から自動反映されます -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="logo-jp js-club-name-jp">徳島文理大学男子サッカー部</span>
+      <span class="logo-en js-club-name-en">BUNRI UNIV. SOCCER CLUB</span>
+    </div>
+
+    <ul class="footer-social">
+      <li><a href="#" target="_blank" rel="noopener" aria-label="Instagram" class="js-instagram-link">
+        <svg viewBox="0 0 24 24" width="20" height="20"><rect x="2.5" y="2.5" width="19" height="19" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor"/></svg>
+      </a></li>
+      <li><a href="#" target="_blank" rel="noopener" aria-label="X (Twitter)" class="js-x-link">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 3l7.5 9.1L3.4 21h2.3l6-6.9L16.9 21H21l-7.9-9.6L20.4 3h-2.3l-5.6 6.4L7.1 3H3zm3.1 1.6h2l9.9 12.8h-2L6.1 4.6z"/></svg>
+      </a></li>
+    </ul>
+
+    <p class="footer-copy" id="footerCopy">&copy; 2026 Tokushima Bunri University Men's Soccer Club. All Rights Reserved.</p>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="sheets-sync.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

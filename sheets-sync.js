@@ -53,6 +53,33 @@
     ["opponent", "対戦相手"]
   ];
 
+  // ---- 更新頻度が低いもの（スプレッドシート直接編集。フォームは使わない） ----
+  const STAFF_KEYWORDS = [
+    ["photo", "写真"],
+    ["comment", "コメント"],
+    ["role", "役職"],
+    ["name", "名前"]
+  ];
+
+  const PLAYER_KEYWORDS = [
+    ["photo", "写真"],
+    ["isStaffRaw", "スタッフ"],
+    ["initial", "イニシャル"],
+    ["sub", "出身"],
+    ["role", "役職"],
+    ["grade", "学年"],
+    ["name", "名前"]
+  ];
+
+  const SPONSOR_KEYWORDS = [
+    ["imageUrl", "ロゴ"],
+    ["shortName", "短い"],
+    ["address", "住所"],
+    ["description", "事業内容"],
+    ["url", "URL"],
+    ["name", "企業名"]
+  ];
+
   // ---- タイムアウト付きfetch ----
   async function fetchWithTimeout(url) {
     const controller = new AbortController();
@@ -105,11 +132,15 @@
   }
 
   // CSVの2次元配列を { headers: [...], objects: [{列名: 値}, ...] } に変換
-  function csvToTable(csvText) {
+  // skipExampleRow を true にすると、1行目（見出し）の次の行（2行目）を
+  // 「記入例」とみなして読み飛ばす。選手・スタッフ・スポンサーのように、
+  // フォームを介さず直接編集するシートで、2行目に記入例を置けるようにするため
+  function csvToTable(csvText, skipExampleRow) {
     const rows = parseCsv(csvText).filter((r) => r.some((v) => v !== ""));
     if (rows.length < 2) return { headers: [], objects: [] };
     const headers = rows[0].map((h) => h.trim());
-    const objects = rows.slice(1).map((r) => {
+    const dataRows = skipExampleRow ? rows.slice(2) : rows.slice(1);
+    const objects = dataRows.map((r) => {
       const obj = {};
       headers.forEach((h, i) => { obj[h] = (r[i] || "").trim(); });
       return obj;
@@ -205,6 +236,68 @@
     //   日付から自動で行うので、フォームにはどの順番で入力しても大丈夫です。
   }
 
+  function buildStaffData(headers, objects) {
+    const cols = resolveColumns(headers, STAFF_KEYWORDS);
+    return objects
+      .map((o) => ({
+        role: getVal(o, cols, "role"),
+        name: getVal(o, cols, "name"),
+        comment: getVal(o, cols, "comment"),
+        photo: getVal(o, cols, "photo")
+      }))
+      .filter((s) => s.name)
+      .slice(0, SAFETY_MAX_ROWS);
+  }
+
+  function buildPlayersData(headers, objects) {
+    const cols = resolveColumns(headers, PLAYER_KEYWORDS);
+    return objects
+      .map((o) => {
+        const isStaffRaw = getVal(o, cols, "isStaffRaw");
+        // 「はい」「Yes」「する」などを true として扱う（空欄・「いいえ」は false）
+        const isStaff = /はい|yes|true|する/i.test(isStaffRaw) && !/いいえ|no|しない/i.test(isStaffRaw);
+
+        const name = getVal(o, cols, "name");
+        const grade = getVal(o, cols, "grade");
+
+        // イニシャルが空欄なら、名前の1文字目を自動で使う
+        const initialRaw = getVal(o, cols, "initial");
+        const initial = initialRaw || name.charAt(0);
+
+        // 表示する役職が空欄なら、学年から自動で「○年生」を作る
+        // （マネージャーなど、学年と表示を変えたい人だけ手入力すればOK）
+        const roleRaw = getVal(o, cols, "role");
+        const role = roleRaw || (grade ? `${grade}生` : "");
+
+        return {
+          name,
+          initial,
+          grade,
+          role,
+          sub: getVal(o, cols, "sub"),
+          photo: getVal(o, cols, "photo"),
+          isStaff
+        };
+      })
+      .filter((p) => p.name)
+      .slice(0, SAFETY_MAX_ROWS);
+  }
+
+  function buildSponsorsData(headers, objects) {
+    const cols = resolveColumns(headers, SPONSOR_KEYWORDS);
+    return objects
+      .map((o) => ({
+        name: getVal(o, cols, "name"),
+        shortName: getVal(o, cols, "shortName"),
+        address: getVal(o, cols, "address"),
+        description: getVal(o, cols, "description"),
+        url: getVal(o, cols, "url"),
+        imageUrl: getVal(o, cols, "imageUrl")
+      }))
+      .filter((s) => s.name)
+      .slice(0, SAFETY_MAX_ROWS);
+  }
+
   // ---- メイン処理：data.js の sheetsSyncConfig を見て、あれば読み込む ----
   window.loadSheetsData = async function loadSheetsData() {
     if (typeof sheetsSyncConfig === "undefined") return;
@@ -237,6 +330,51 @@
           .catch((err) => {
             window.__scheduleSyncFailed = true;
             console.warn("[試合結果連携] 読み込みに失敗したため、data.js の内容を表示します:", err);
+          })
+      );
+    }
+
+    if (sheetsSyncConfig.staffCsvUrl) {
+      tasks.push(
+        fetchWithRetry(sheetsSyncConfig.staffCsvUrl)
+          .then((text) => {
+            const { headers, objects } = csvToTable(text, true); // 2行目は記入例として読み飛ばす
+            window.__syncedStaffData = buildStaffData(headers, objects);
+            window.__staffSyncFailed = false;
+          })
+          .catch((err) => {
+            window.__staffSyncFailed = true;
+            console.warn("[監督・コーチ連携] 読み込みに失敗したため、data.js の内容を表示します:", err);
+          })
+      );
+    }
+
+    if (sheetsSyncConfig.playersCsvUrl) {
+      tasks.push(
+        fetchWithRetry(sheetsSyncConfig.playersCsvUrl)
+          .then((text) => {
+            const { headers, objects } = csvToTable(text, true); // 2行目は記入例として読み飛ばす
+            window.__syncedPlayersData = buildPlayersData(headers, objects);
+            window.__playersSyncFailed = false;
+          })
+          .catch((err) => {
+            window.__playersSyncFailed = true;
+            console.warn("[選手連携] 読み込みに失敗したため、data.js の内容を表示します:", err);
+          })
+      );
+    }
+
+    if (sheetsSyncConfig.sponsorsCsvUrl) {
+      tasks.push(
+        fetchWithRetry(sheetsSyncConfig.sponsorsCsvUrl)
+          .then((text) => {
+            const { headers, objects } = csvToTable(text, true); // 2行目は記入例として読み飛ばす
+            window.__syncedSponsorsData = buildSponsorsData(headers, objects);
+            window.__sponsorsSyncFailed = false;
+          })
+          .catch((err) => {
+            window.__sponsorsSyncFailed = true;
+            console.warn("[スポンサー連携] 読み込みに失敗したため、data.js の内容を表示します:", err);
           })
       );
     }

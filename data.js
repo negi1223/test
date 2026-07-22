@@ -42,8 +42,17 @@
                    過去の記録として振り返ることは引き続き可能です）
    ------------------------------------------------------------------------- */
 const sheetsSyncConfig = {
+  // 更新頻度が高いもの（Googleフォーム経由）
   newsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTWUJmUrO-zjJTRx_-hEenJ_wW028Us_k8UEvjPSbzxpwLR_tgIG0NHK4FDM5npFfz4d-aIzcXkyoBY/pub?output=csv",
   scheduleCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwa4U__S9rmKoTSKPCdfhdd_OAUhcZ9uoP03ZAa378oeWz2MhmypaNOK0s0Hp6lkoPYL_vb3wRYq6x/pub?output=csv",
+
+  // 更新頻度が低いもの（Googleフォームは経由せず、スプレッドシートを直接編集する）
+  // 空欄（""）のままなら、今まで通り下の playersData / staffData / sponsorsData が使われます。
+  // 設定方法は、このファイルの各データの説明コメント（220行目あたり〜）を参照してください
+  playersCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=210235188&single=true&output=csv",
+  staffCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=1706764530&single=true&output=csv",
+  sponsorsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=2145349521&single=true&output=csv",
+
   newsMaxItems: 6,
   currentSeason: "" // 空欄なら自動判定。手動で固定したい年度がある時だけ "2027" のように入力する
 };
@@ -271,6 +280,20 @@ const scheduleData = [
 /* -------------------------------------------------------------------------
    5. 監督・コーチのコメント（MEMBERSセクション上部）
    photo: 顔写真を使いたい場合は画像パスを入れる（例: "images/staff-kaneko.jpg"）
+
+   ※スプレッドシートで管理することもできます（Googleフォームは使いません）。
+     sheetsSyncConfig.staffCsvUrl を設定すると、このデータの代わりに
+     スプレッドシートの内容が使われます（未設定・失敗時はこのデータのまま）。
+
+     【設定手順】
+     ① 新しくGoogleスプレッドシートを作る（フォームは作らない）
+     ② 1行目（見出し行）に「役職」「名前」「コメント」「写真ファイル名」と入力する
+     ③ 2行目は自由に「記入例」を書いてOK（自動的に読み飛ばされ、サイトには使われません）
+     ④ 3行目から、監督・コーチ1人につき1行ずつ入力する
+     ⑤ 「ファイル」→「共有」→「ウェブに公開」→ 形式を「カンマ区切りの値(.csv)」にして公開
+     ⑥ 表示されたURLを sheetsSyncConfig.staffCsvUrl に貼る
+     ※列名は完全一致でなくてOK。「役職」「名前」「コメント」「写真」という
+       文字さえ含まれていれば認識されます
    ------------------------------------------------------------------------- */
 const staffData = [
   { role: "監督",        name: "金子 憲一", comment: "審判・運営・マネージャーなど、サッカーに関わりたい人なら誰でも歓迎する方針でチームを率いています。", photo: "images/kaneko.jpg" },
@@ -287,6 +310,25 @@ const staffData = [
    isStaff: true にすると選手写真の背景色が変わります
    photo: 顔写真を使いたい場合はここに画像パスを入れる（例: "images/player-01.jpg"）
           入れなければ今まで通り initial の文字が丸背景で表示されます
+
+   ※スプレッドシートで管理することもできます（Googleフォームは使いません）。
+     sheetsSyncConfig.playersCsvUrl を設定すると、このデータの代わりに
+     スプレッドシートの内容が使われます（未設定・失敗時はこのデータのまま）。
+
+     【設定手順】
+     ① 新しくGoogleスプレッドシートを作る（フォームは作らない）
+     ② 1行目（見出し行）に「名前」「イニシャル」「学年」「表示する学年・役職」
+        「出身校など補足」「写真ファイル名」「スタッフですか」と入力する
+     ③ 2行目は自由に「記入例」を書いてOK（自動的に読み飛ばされ、サイトには使われません）
+     ④ 3行目から、選手・マネージャー1人につき1行ずつ入力する
+        （「スタッフですか」の列は、マネージャーなど選手以外の人だけ「はい」と入れる）
+     ⑤ 「ファイル」→「共有」→「ウェブに公開」→ 形式を「カンマ区切りの値(.csv)」にして公開
+     ⑥ 表示されたURLを sheetsSyncConfig.playersCsvUrl に貼る
+     ※列名は完全一致でなくてOK。「名前」「イニシャル」「学年」「役職」「出身」
+       「写真」「スタッフ」という文字さえ含まれていれば認識されます
+     ※「イニシャル」は空欄でOK（未入力なら名前の1文字目が自動で使われます）
+     ※「表示する学年・役職」も空欄でOK（未入力なら学年から「○年生」が自動で
+       作られます）。マネージャーなど、学年と表示を変えたい人だけ入力してください
    ------------------------------------------------------------------------- */
 const playersData = [
   { name: "萩原 一貴", initial: "萩", grade: "4年", role: "4年生", sub: "出身：板野高校", photo: "images/ogiwara.jpg" },
@@ -363,6 +405,21 @@ const faqData = [
    url:         企業様サイトへのリンク
    imageUrl:    実際のロゴ画像を使いたい場合はここに画像パスを入れる
                 （例："images/sponsor-sbm.png"）入れれば自動でテキストから画像表示に切り替わります
+
+   ※スプレッドシートで管理することもできます（Googleフォームは使いません）。
+     sheetsSyncConfig.sponsorsCsvUrl を設定すると、このデータの代わりに
+     スプレッドシートの内容が使われます（未設定・失敗時はこのデータのまま）。
+
+     【設定手順】
+     ① 新しくGoogleスプレッドシートを作る（フォームは作らない）
+     ② 1行目（見出し行）に「企業名」「表示用の短い名前」「住所」「事業内容」
+        「URL」「ロゴ画像ファイル名」と入力する
+     ③ 2行目は自由に「記入例」を書いてOK（自動的に読み飛ばされ、サイトには使われません）
+     ④ 3行目から、企業様1社につき1行ずつ入力する
+     ⑤ 「ファイル」→「共有」→「ウェブに公開」→ 形式を「カンマ区切りの値(.csv)」にして公開
+     ⑥ 表示されたURLを sheetsSyncConfig.sponsorsCsvUrl に貼る
+     ※列名は完全一致でなくてOK。「企業名」「短い」「住所」「事業内容」「URL」
+       「ロゴ」という文字さえ含まれていれば認識されます
    ------------------------------------------------------------------------- */
 const sponsorsData = [
   {

@@ -297,8 +297,9 @@ document.addEventListener('DOMContentLoaded', async () => {
      5. 監督・コーチのコメント
   ========================================================= */
   const staffComments = document.getElementById('staffComments');
-  if (staffComments && typeof staffData !== 'undefined') {
-    staffComments.innerHTML = staffData.map((s) => `
+  const effectiveStaffData = window.__syncedStaffData || (typeof staffData !== 'undefined' ? staffData : []);
+  if (staffComments) {
+    staffComments.innerHTML = effectiveStaffData.map((s) => `
       <blockquote class="comment-card">
         ${s.photo ? `<img src="${escapeHtml(s.photo)}" alt="${escapeHtml(s.name)}" class="comment-avatar" loading="lazy">` : ''}
         <p class="comment-role">${escapeHtml(s.role)}</p>
@@ -307,14 +308,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       </blockquote>
     `).join('');
   }
+  const staffSyncWarning = document.getElementById('staffSyncWarning');
+  if (staffSyncWarning) staffSyncWarning.hidden = !(window.__staffSyncFailed && cfg.staffCsvUrl);
 
   /* =========================================================
      6. 選手・スタッフ
   ========================================================= */
   const playerGrid = document.getElementById('playerGrid');
   const filterEmpty = document.getElementById('filterEmpty');
-  if (playerGrid && typeof playersData !== 'undefined') {
-    playerGrid.innerHTML = playersData.map((p) => `
+  const effectivePlayersData = window.__syncedPlayersData || (typeof playersData !== 'undefined' ? playersData : []);
+  if (playerGrid) {
+    playerGrid.innerHTML = effectivePlayersData.map((p) => `
       <article class="player-card${p.isStaff ? ' player-card--staff' : ''}" data-grade="${escapeHtml(p.grade)}">
         <div class="player-photo">
           ${p.photo
@@ -327,6 +331,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       </article>
     `).join('');
   }
+  const playersSyncWarning = document.getElementById('playersSyncWarning');
+  if (playersSyncWarning) playersSyncWarning.hidden = !(window.__playersSyncFailed && cfg.playersCsvUrl);
 
   /* =========================================================
      7. よくある質問（アコーディオン本体もここで組み立てます）
@@ -372,8 +378,9 @@ document.addEventListener('DOMContentLoaded', async () => {
      8. スポンサー
   ========================================================= */
   const sponsorGrid = document.getElementById('sponsorGrid');
-  if (sponsorGrid && typeof sponsorsData !== 'undefined') {
-    sponsorGrid.innerHTML = sponsorsData.map((s) => `
+  const effectiveSponsorsData = window.__syncedSponsorsData || (typeof sponsorsData !== 'undefined' ? sponsorsData : []);
+  if (sponsorGrid) {
+    sponsorGrid.innerHTML = effectiveSponsorsData.map((s) => `
       <li class="sponsor-card">
         <a class="sponsor-logo" href="${escapeHtml(s.url)}" target="_blank" rel="noopener sponsored">
           ${s.imageUrl
@@ -388,6 +395,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       </li>
     `).join('');
   }
+  const sponsorsSyncWarning = document.getElementById('sponsorsSyncWarning');
+  if (sponsorsSyncWarning) sponsorsSyncWarning.hidden = !(window.__sponsorsSyncFailed && cfg.sponsorsCsvUrl);
 
   /* =========================================================
      9. 企業様向けご支援案内

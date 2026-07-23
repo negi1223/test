@@ -897,6 +897,17 @@ input, textarea, select{ font-family: inherit; font-size: 1rem; }
 }
 .accordion-panel p{ margin: 0; }
 .accordion-panel a{ color: var(--red); border-bottom: 1px solid var(--red); }
+.faq-more{
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: .85rem;
+  color: var(--red);
+  border-bottom: none;
+}
+.faq-more::after{ content: " →"; }
+.faq-more:hover{ text-decoration: underline; }
 
 /* =========================================================
    SPONSORS
@@ -955,10 +966,32 @@ input, textarea, select{ font-family: inherit; font-size: 1rem; }
   border: 1.5px solid var(--ink);
   padding: 22px 24px;
 }
+.support-image-link{
+  position: relative;
+  display: block;
+  margin-bottom: 16px;
+  cursor: zoom-in;
+}
+.support-image-link::after{
+  content: "🔍 拡大表示";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  background: rgba(23,18,15,.78);
+  color: var(--white);
+  font-family: var(--font-label);
+  font-size: .72rem;
+  font-weight: 600;
+  padding: .3em .7em;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.support-image-link:hover::after,
+.support-image-link:focus-visible::after{ opacity: 1; }
 .support-image{
   width: 100%;
   border: 1px solid var(--line);
-  margin-bottom: 16px;
+  margin-bottom: 0;
   display: block;
 }
 .support-title{

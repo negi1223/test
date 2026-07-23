@@ -77,6 +77,28 @@
     ["name", "名前"]
   ];
 
+  // 「その他」シートは固定の列名ではなく、1列目＝項目名／2列目＝内容 の
+  // 「行」ごとに読み取る（対応する項目名は buildSettingsData 側で判定する）
+  const SETTINGS_ROW_KEYWORDS = [
+    ["item", "項目"],
+    ["value", "内容"]
+  ];
+
+  const FAQ_KEYWORDS = [
+    ["q", "質問"],
+    ["a", "回答"],
+    ["url", ["URL", "リンク"]]
+  ];
+
+  // 「箇条書きで表示したい項目」は1つのセルの中で改行して複数行入力してもらい、
+  // 改行ごとに箇条書きの1項目として分割する
+  const SUPPORT_KEYWORDS = [
+    ["image", ["画像", "写真"]],
+    ["lead", "説明"],
+    ["itemsRaw", "項目"],
+    ["title", "見出し"]
+  ];
+
   // ---- タイムアウト付きfetch ----
   async function fetchWithTimeout(url) {
     const controller = new AbortController();
@@ -330,6 +352,67 @@
       .slice(0, SAFETY_MAX_ROWS);
   }
 
+  // 「その他」シート：1列目＝項目名／2列目＝内容 の行を、項目名に含まれる
+  // キーワードで判定して settings オブジェクトに詰め直す。
+  // 新しい項目を増やしたい時は、ここに1行足すだけで対応できる
+  const SETTINGS_ROW_MATCHERS = [
+    ["affiliation", "所属"],
+    ["heroPhoto", ["ヒーロー画像", "トップ画像", "ヒーロー写真"]],
+    ["slogan", "スローガン"],
+    ["aboutText", ["紹介文", "部の紹介"]],
+    ["venue", "活動場所"],
+    ["schedule", "活動日時"],
+    ["adviserEmail", "顧問"],
+    ["sponsorEmail", ["スポンサー", "協賛"]]
+  ];
+  function buildSettingsData(headers, objects) {
+    const cols = resolveColumns(headers, SETTINGS_ROW_KEYWORDS);
+    const result = {};
+    objects.forEach((o) => {
+      const label = getVal(o, cols, "item");
+      const value = getVal(o, cols, "value");
+      if (!label || !value) return;
+      const match = SETTINGS_ROW_MATCHERS.find(([, kw]) => {
+        const kws = Array.isArray(kw) ? kw : [kw];
+        return kws.some((k) => includesLoose(label, k));
+      });
+      if (!match) return;
+      const key = match[0];
+      result[key] = key === "heroPhoto" ? resolveImagePath(value) : value;
+    });
+    return result;
+  }
+
+  function buildFaqData(headers, objects) {
+    const cols = resolveColumns(headers, FAQ_KEYWORDS);
+    return objects
+      .map((o) => ({
+        q: getVal(o, cols, "q"),
+        a: getVal(o, cols, "a"),
+        url: getVal(o, cols, "url")
+      }))
+      .filter((f) => f.q)
+      .slice(0, SAFETY_MAX_ROWS);
+  }
+
+  function buildSupportData(headers, objects) {
+    const cols = resolveColumns(headers, SUPPORT_KEYWORDS);
+    return objects
+      .map((o) => {
+        // セルの中で改行して複数行入力されたものを、箇条書きの1項目ずつに分ける
+        const itemsRaw = getVal(o, cols, "itemsRaw");
+        const items = itemsRaw.split(/\r?\n/).map((v) => v.trim()).filter((v) => v);
+        return {
+          title: getVal(o, cols, "title"),
+          lead: getVal(o, cols, "lead"),
+          items,
+          image: resolveImagePath(getVal(o, cols, "image"))
+        };
+      })
+      .filter((s) => s.title)
+      .slice(0, SAFETY_MAX_ROWS);
+  }
+
   // ---- メイン処理：data.js の sheetsSyncConfig を見て、あれば読み込む ----
   window.loadSheetsData = async function loadSheetsData() {
     if (typeof sheetsSyncConfig === "undefined") return;
@@ -407,6 +490,51 @@
           .catch((err) => {
             window.__sponsorsSyncFailed = true;
             console.warn("[スポンサー連携] 読み込みに失敗したため、data.js の内容を表示します:", err);
+          })
+      );
+    }
+
+    if (sheetsSyncConfig.settingsCsvUrl) {
+      tasks.push(
+        fetchWithRetry(sheetsSyncConfig.settingsCsvUrl)
+          .then((text) => {
+            const { headers, objects } = csvToTable(text, true);
+            window.__syncedSettings = buildSettingsData(headers, objects);
+            window.__settingsSyncFailed = false;
+          })
+          .catch((err) => {
+            window.__settingsSyncFailed = true;
+            console.warn("[その他設定連携] 読み込みに失敗したため、data.js の内容を表示します:", err);
+          })
+      );
+    }
+
+    if (sheetsSyncConfig.faqCsvUrl) {
+      tasks.push(
+        fetchWithRetry(sheetsSyncConfig.faqCsvUrl)
+          .then((text) => {
+            const { headers, objects } = csvToTable(text, true);
+            window.__syncedFaqData = buildFaqData(headers, objects);
+            window.__faqSyncFailed = false;
+          })
+          .catch((err) => {
+            window.__faqSyncFailed = true;
+            console.warn("[Q&A連携] 読み込みに失敗したため、data.js の内容を表示します:", err);
+          })
+      );
+    }
+
+    if (sheetsSyncConfig.supportCsvUrl) {
+      tasks.push(
+        fetchWithRetry(sheetsSyncConfig.supportCsvUrl)
+          .then((text) => {
+            const { headers, objects } = csvToTable(text, true);
+            window.__syncedSupportData = buildSupportData(headers, objects);
+            window.__supportSyncFailed = false;
+          })
+          .catch((err) => {
+            window.__supportSyncFailed = true;
+            console.warn("[企業様向けご支援案内連携] 読み込みに失敗したため、data.js の内容を表示します:", err);
           })
       );
     }

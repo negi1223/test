@@ -52,6 +52,9 @@ const sheetsSyncConfig = {
   playersCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=210235188&single=true&output=csv",
   staffCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=1706764530&single=true&output=csv",
   sponsorsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=2145349521&single=true&output=csv",
+  settingsCsvUrl: "", // 現役部員数・所属（ヒーローの数字）。設定方法はheroDataのコメント参照
+  faqCsvUrl: "",       // Q&A。設定方法はfaqDataのコメント参照
+  supportCsvUrl: "",   // 企業様向けご支援案内。設定方法はsupportDataのコメント参照
 
   newsMaxItems: 6,
   currentSeason: "" // 空欄なら自動判定。手動で固定したい年度がある時だけ "2027" のように入力する
@@ -82,15 +85,57 @@ const siteData = {
   sponsorFormEmbedUrl: "https://docs.google.com/forms/d/e/1FAIpQLSewjVc6v5sLaSuV8EkcaNiRAf_fQkKz0CBimOnra1tyD7aTXA/viewform?embedded=true",
   sponsorFormUrl: "https://docs.google.com/forms/d/e/1FAIpQLSewjVc6v5sLaSuV8EkcaNiRAf_fQkKz0CBimOnra1tyD7aTXA/viewform",
 
-  copyrightYear: "2026",
+  copyrightYear: "2026", // サイトを開設した年（この数字は変えない）。今の年と違えば自動で「2026 - 2027」のように表示される
   copyrightEn: "Tokushima Bunri University Men's Soccer Club. All Rights Reserved."
 };
+
+/* -------------------------------------------------------------------------
+   ★「その他」スプレッドシート（sheetsSyncConfig.settingsCsvUrl）について
+
+   ヒーローの所属・写真、Aboutのスローガン・紹介文・活動場所・活動日時、
+   企業様・スポンサー様向けメールアドレスなど、いろいろな箇所をまとめて
+   1つのスプレッドシートで変更できます（Googleフォームは使いません）。
+
+   他のシート（選手一覧など）と違って「1件＝1行」ではなく、
+   「1つの設定＝1行」という表になります。
+
+   【設定手順】
+   ① 新しくGoogleスプレッドシートを作る（フォームは作らない）
+   ② 1行目に自由に「記入例」を書く（自動的に読み飛ばされ、サイトには使われません）
+   ③ 2行目（見出し行）に「項目」「内容」の2つを入力する
+   ④ 3行目から、変更したい項目だけ1行ずつ入力する（変更しない項目の行は
+     作らなくてOK。空欄のまま残しておいても無視されます）
+   ⑤ 「ファイル」→「共有」→「ウェブに公開」→ 形式を「カンマ区切りの値(.csv)」にして公開
+   ⑥ 表示されたURLを sheetsSyncConfig.settingsCsvUrl に貼る
+
+   【「項目」に入力する内容（この文字を含んでいれば認識されます）】
+     所属             → ヒーローの「所属」の数字（例："SUL2部"）
+     ヒーロー画像      → トップの活動写真（images/ は省略可）
+     スローガン        → Aboutのスローガン
+     紹介文           → Aboutの部の紹介文
+     活動場所         → Aboutの「活動場所」カードの内容
+     活動日時         → Aboutの「活動日時」カードの内容
+     顧問             → 顧問の連絡先メールアドレス
+     スポンサー（または協賛） → 企業様・スポンサー様向けメールアドレス
+
+   例）
+   項目,内容
+   所属,SUL1部
+   スローガン,「一致団結、頂点へ。」
+   活動場所,徳島文理大学 新グラウンド
+   ------------------------------------------------------------------------- */
 
 
 /* -------------------------------------------------------------------------
    1. トップビジュアル（HEROセクション）
    photo: 写真を使いたい場合は "images/hero.jpg" のように画像パスを入れる
           空のまま（""）にするとダミー表示のままになります
+
+   ※stats の中の「現役部員」は、playersData（選手・マネージャーの合計人数）から
+     自動で計算されるので、手入力の必要はありません
+   ※「所属」とヒーローの写真は、下の「その他」スプレッドシート
+     （sheetsSyncConfig.settingsCsvUrl）でも変更できます。詳しくは
+     siteData のすぐ下にあるコメントを参照してください
    ------------------------------------------------------------------------- */
 const heroData = {
   eyebrow: "TOKUSHIMA BUNRI UNIV. SOCCER CLUB",
@@ -380,6 +425,23 @@ const playersData = [
    7. 新入生向けよくある質問（FAQセクション）
    answerHtml は少しだけHTMLが使えます（リンクを入れたい場合など）。
    例）'Instagram（<a href="...">@bunri.uni</a>）のDMへ'
+
+   ※スプレッドシートで管理することもできます（Googleフォームは使いません）。
+     sheetsSyncConfig.faqCsvUrl を設定すると、このデータの代わりに
+     スプレッドシートの内容が使われます（未設定・失敗時はこのデータのまま）。
+
+     【設定手順】
+     ① 新しくGoogleスプレッドシートを作る（フォームは作らない）
+     ② 1行目に自由に「記入例」を書く（自動的に読み飛ばされ、サイトには使われません）
+     ③ 2行目（見出し行）に「質問」「回答」「URL(あれば)」の3つを入力する
+     ④ 3行目から、Q&A1件につき1行ずつ入力する
+     ⑤ 「ファイル」→「共有」→「ウェブに公開」→ 形式を「カンマ区切りの値(.csv)」にして公開
+     ⑥ 表示されたURLを sheetsSyncConfig.faqCsvUrl に貼る
+     ※列名は完全一致でなくてOK。「質問」「回答」「URL」（または「リンク」）
+       という文字さえ含まれていれば認識されます
+     ※「URL」に入力があると、回答の下に「詳しく見る→」というリンクが
+       自動的に表示されます（空欄ならリンクは表示されません）
+     ※スプレッドシート経由の場合、回答欄にHTMLタグは使えません（文章のみ）
    ------------------------------------------------------------------------- */
 const faqData = [
   {
@@ -495,6 +557,34 @@ const sponsorsData = [
    lead:  見出し直下の説明文
    items: 箇条書きにする項目（配列）
    image: 案内文書の写真を貼りたい場合はここに画像パスを入れる
+
+   ※スプレッドシートで管理することもできます（Googleフォームは使いません）。
+     sheetsSyncConfig.supportCsvUrl を設定すると、このデータの代わりに
+     スプレッドシートの内容が使われます（未設定・失敗時はこのデータのまま）。
+
+     【設定手順】
+     ① 新しくGoogleスプレッドシートを作る（フォームは作らない）
+     ② 1行目に自由に「記入例」を書く（自動的に読み飛ばされ、サイトには使われません）
+     ③ 2行目（見出し行）に「見出し」「説明」「箇条書きで表示したい項目」
+        「写真ファイル名」の4つを入力する
+     ④ 3行目から、案内カード1枚につき1行ずつ入力する
+        「箇条書きで表示したい項目」のセルの中で、Alt+Enter（Macは⌥+Enter）を
+        押すと1つのセルの中で改行できます。改行した行ごとに、それぞれ別の
+        箇条書きとして表示されます。例えば1つのセルの中に
+
+          掲載媒体：練習用ウェア（練習や公式戦ウォーミングアップ時に使用）
+          契約期間：2026年4月1日～2027年3月31日
+          体裁：①35×15cm（30,000円）／②15×15cm（20,000円）／③10×5cm（10,000円）
+          広告仕様：デザインはお申し込み後に相談
+          協賛費使用目的：年間活動費（県外への公式戦・遠征貸切バス代、必要備品購入等）
+
+        のように改行しながら入力すると、5つの箇条書きとして表示されます
+     ⑤ 「ファイル」→「共有」→「ウェブに公開」→ 形式を「カンマ区切りの値(.csv)」にして公開
+     ⑥ 表示されたURLを sheetsSyncConfig.supportCsvUrl に貼る
+     ※列名は完全一致でなくてOK。「見出し」「説明」「項目」、「画像」または
+       「写真」という文字さえ含まれていれば認識されます
+     ※「画像ファイル名」は images/ を省略してOK（"uniform-ad.jpg" だけで
+       自動的に "images/uniform-ad.jpg" として扱われます）
    ------------------------------------------------------------------------- */
 const supportData = [
   {

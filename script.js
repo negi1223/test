@@ -81,19 +81,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.js-instagram-handle').forEach((el) => { el.textContent = siteData.instagramHandle; });
     document.querySelectorAll('.js-x-link').forEach((el) => { el.href = siteData.xUrl; });
 
-    // 企業様・スポンサー様向けメールアドレス
-    document.querySelectorAll('.js-sponsor-email').forEach((el) => {
-      el.href = `mailto:${siteData.sponsorEmail}`;
-      el.textContent = siteData.sponsorEmail;
-    });
-
     // Googleフォーム（企業様・スポンサー様向け）※埋め込みプレビューは廃止し、ボタンリンクのみ
     const gformButton = document.getElementById('gformButton');
     if (gformButton) gformButton.href = siteData.sponsorFormUrl;
 
     // フッター著作権表記
     const footerCopy = document.getElementById('footerCopy');
-    if (footerCopy) footerCopy.textContent = `© ${siteData.copyrightYear} ${siteData.copyrightEn}`;
+    if (footerCopy) {
+      const startYear = parseInt(siteData.copyrightYear, 10);
+      const nowYear = new Date().getFullYear();
+      const yearLabel = (startYear && nowYear > startYear) ? `${startYear} - ${nowYear}` : siteData.copyrightYear;
+      footerCopy.textContent = `© ${yearLabel} ${siteData.copyrightEn}`;
+    }
   }
 
   /* =========================================================
@@ -110,38 +109,71 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const subEl = document.getElementById('heroSub');
     if (subEl) subEl.textContent = heroData.sub;
-
-    const statsEl = document.getElementById('heroStats');
-    if (statsEl && heroData.stats) {
-      statsEl.innerHTML = heroData.stats.map((s) => `
-        <div><dt>${escapeHtml(s.label)}</dt><dd>${escapeHtml(s.value)}<span>${escapeHtml(s.suffix || '')}</span></dd></div>
-      `).join('');
-    }
-
-    const heroPhotoWrap = document.getElementById('heroPhoto');
-    if (heroPhotoWrap && heroData.photo) {
-      const img = document.createElement('img');
-      img.src = heroData.photo;
-      img.alt = heroData.photoAlt || '活動中の様子';
-      img.className = 'hero-photo-img';
-      img.onerror = () => img.remove(); // 画像が見つからない場合はダミー表示のまま
-      heroPhotoWrap.prepend(img);
-    }
   }
 
   /* =========================================================
-     2. 部の紹介・練習日時（aboutData）
+     3. ニュース ／ 4. 試合日程・結果
+     （Googleスプレッドシート連携が設定されていれば、そちらを優先して使う。
+      未設定・通信失敗のときは data.js の newsData / scheduleData を使う）
   ========================================================= */
+  await sheetsSyncPromise;
+  const cfg = (typeof sheetsSyncConfig !== 'undefined') ? sheetsSyncConfig : {};
+  const newsMaxItems = cfg.newsMaxItems || 6;
+
+  /* =========================================================
+     1-2. トップの数字・写真、About、連絡先メール
+     ※「その他」スプレッドシート（settingsCsvUrl）が設定されていれば、
+      該当する項目だけをそちらの値で上書きする。項目名（1列目）で判定するので、
+      対応表は data.js の siteData コメント（その他設定のところ）を参照
+  ========================================================= */
+  const settings = window.__syncedSettings || {};
+
+  // 現役部員数は「選手＋マネージャーの合計」を自動計算する（手入力不要）
+  const rawPlayersDataForCount = window.__syncedPlayersData || (typeof playersData !== 'undefined' ? playersData : []);
+  const totalMemberCount = String(rawPlayersDataForCount.length);
+
+  const statsEl = document.getElementById('heroStats');
+  if (statsEl && typeof heroData !== 'undefined' && heroData.stats) {
+    const mergedStats = heroData.stats.map((s) => {
+      if (s.label === '現役部員') {
+        return { ...s, value: totalMemberCount };
+      }
+      if (s.label === '所属' && settings.affiliation) {
+        return { ...s, value: settings.affiliation, suffix: '' };
+      }
+      return s;
+    });
+    statsEl.innerHTML = mergedStats.map((s) => `
+      <div><dt>${escapeHtml(s.label)}</dt><dd>${escapeHtml(s.value)}<span>${escapeHtml(s.suffix || '')}</span></dd></div>
+    `).join('');
+  }
+
+  const heroPhotoWrap = document.getElementById('heroPhoto');
+  const heroPhotoPath = settings.heroPhoto || (typeof heroData !== 'undefined' ? heroData.photo : '');
+  if (heroPhotoWrap && heroPhotoPath) {
+    const img = document.createElement('img');
+    img.src = heroPhotoPath;
+    img.alt = (typeof heroData !== 'undefined' && heroData.photoAlt) || '活動中の様子';
+    img.className = 'hero-photo-img';
+    img.onerror = () => img.remove(); // 画像が見つからない場合はダミー表示のまま
+    heroPhotoWrap.prepend(img);
+  }
+
   if (typeof aboutData !== 'undefined') {
     const sloganEl = document.getElementById('aboutSlogan');
-    if (sloganEl) sloganEl.textContent = aboutData.slogan;
+    if (sloganEl) sloganEl.textContent = settings.slogan || aboutData.slogan;
 
     const textEl = document.getElementById('aboutText');
-    if (textEl) textEl.textContent = aboutData.text;
+    if (textEl) textEl.textContent = settings.aboutText || aboutData.text;
 
     const factsEl = document.getElementById('aboutFacts');
     if (factsEl && aboutData.facts) {
-      factsEl.innerHTML = aboutData.facts.map((f) => `
+      const mergedFacts = aboutData.facts.map((f) => {
+        if (f.label === '活動場所' && settings.venue) return { ...f, value: settings.venue };
+        if (f.label === '活動日時' && settings.schedule) return { ...f, value: settings.schedule };
+        return f;
+      });
+      factsEl.innerHTML = mergedFacts.map((f) => `
         <div class="fact-card">
           <dt>${escapeHtml(f.label)}</dt>
           <dd>${escapeHtml(f.value)}${f.note ? `<br><span class="fact-note">${escapeHtml(f.note)}</span>` : ''}</dd>
@@ -157,14 +189,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  /* =========================================================
-     3. ニュース ／ 4. 試合日程・結果
-     （Googleスプレッドシート連携が設定されていれば、そちらを優先して使う。
-      未設定・通信失敗のときは data.js の newsData / scheduleData を使う）
-  ========================================================= */
-  await sheetsSyncPromise;
-  const cfg = (typeof sheetsSyncConfig !== 'undefined') ? sheetsSyncConfig : {};
-  const newsMaxItems = cfg.newsMaxItems || 6;
+  // 企業様・スポンサー様向けメールアドレス（「その他」シートで上書き可能）
+  const effectiveSponsorEmail = settings.sponsorEmail || (typeof siteData !== 'undefined' ? siteData.sponsorEmail : '');
+  document.querySelectorAll('.js-sponsor-email').forEach((el) => {
+    el.href = `mailto:${effectiveSponsorEmail}`;
+    el.textContent = effectiveSponsorEmail;
+  });
+  if (typeof siteData !== 'undefined' && settings.adviserEmail) {
+    siteData.adviserEmail = settings.adviserEmail; // {adviserName}等のトークンで今後使う場合に備えて反映
+  }
+
+  const settingsSyncWarning = document.getElementById('settingsSyncWarning');
+  if (settingsSyncWarning) settingsSyncWarning.hidden = !(window.__settingsSyncFailed && cfg.settingsCsvUrl);
 
   // "2026.06.01" "2026/6/1" "2026-06-01"（年が先）と
   // "6/1/2026"（Googleフォームの日付質問が月-日-年の順で出力する場合）の
@@ -345,7 +381,8 @@ document.addEventListener('DOMContentLoaded', async () => {
      7. よくある質問（アコーディオン本体もここで組み立てます）
   ========================================================= */
   const faqAccordion = document.getElementById('faqAccordion');
-  if (faqAccordion && typeof faqData !== 'undefined') {
+  const rawFaqData = window.__syncedFaqData || (typeof faqData !== 'undefined' ? faqData : []);
+  if (faqAccordion) {
     const tokens = {
       '{instagramUrl}': (typeof siteData !== 'undefined' && siteData.instagramUrl) || '',
       '{instagramHandle}': (typeof siteData !== 'undefined' && siteData.instagramHandle) || '',
@@ -353,9 +390,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     const applyTokens = (str) => Object.keys(tokens).reduce((acc, key) => acc.split(key).join(tokens[key]), str);
 
-    faqAccordion.innerHTML = faqData.map((item, i) => {
+    faqAccordion.innerHTML = rawFaqData.map((item, i) => {
       const n = i + 1;
-      const answer = item.aHtml ? applyTokens(item.aHtml) : escapeHtml(item.a || '');
+      const answer = item.aHtml ? applyTokens(item.aHtml) : applyTokens(escapeHtml(item.a || ''));
       return `
         <div class="accordion-item">
           <h3>
@@ -365,11 +402,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           </h3>
           <div class="accordion-panel" id="faq-a${n}" role="region" aria-labelledby="faq-q${n}" hidden>
             <p>${answer}</p>
+            ${item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" class="faq-more">詳しく見る</a>` : ''}
           </div>
         </div>
       `;
     }).join('');
   }
+  const faqSyncWarning = document.getElementById('faqSyncWarning');
+  if (faqSyncWarning) faqSyncWarning.hidden = !(window.__faqSyncFailed && cfg.faqCsvUrl);
 
   // アコーディオンの開閉（FAQが動的に生成されるため、イベント委譲で処理）
   document.addEventListener('click', (event) => {
@@ -409,18 +449,21 @@ document.addEventListener('DOMContentLoaded', async () => {
      9. 企業様向けご支援案内
   ========================================================= */
   const supportGrid = document.getElementById('supportGrid');
-  if (supportGrid && typeof supportData !== 'undefined') {
-    supportGrid.innerHTML = supportData.map((s) => `
+  const rawSupportData = window.__syncedSupportData || (typeof supportData !== 'undefined' ? supportData : []);
+  if (supportGrid) {
+    supportGrid.innerHTML = rawSupportData.map((s) => `
       <article class="support-card">
-        ${s.image ? `<img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.title)}" class="support-image" loading="lazy">` : ''}
+        ${s.image ? `<a href="${escapeHtml(s.image)}" target="_blank" rel="noopener" class="support-image-link" aria-label="画像を拡大表示"><img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.title)}" class="support-image" loading="lazy"></a>` : ''}
         <h4 class="support-title">${escapeHtml(s.title)}</h4>
         <p class="support-lead">${escapeHtml(s.lead)}</p>
         <ul class="support-list">
-          ${s.items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+          ${(s.items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
         </ul>
       </article>
     `).join('');
   }
+  const supportSyncWarning = document.getElementById('supportSyncWarning');
+  if (supportSyncWarning) supportSyncWarning.hidden = !(window.__supportSyncFailed && cfg.supportCsvUrl);
 
   /* =========================================================
      選手・指導者紹介：フィルター機能

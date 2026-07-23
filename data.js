@@ -52,9 +52,9 @@ const sheetsSyncConfig = {
   playersCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=210235188&single=true&output=csv",
   staffCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=1706764530&single=true&output=csv",
   sponsorsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=2145349521&single=true&output=csv",
-  settingsCsvUrl: "", // 現役部員数・所属（ヒーローの数字）。設定方法はheroDataのコメント参照
-  faqCsvUrl: "",       // Q&A。設定方法はfaqDataのコメント参照
-  supportCsvUrl: "",   // 企業様向けご支援案内。設定方法はsupportDataのコメント参照
+  settingsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=1120366738&single=true&output=csv", // 現役部員数・所属（ヒーローの数字）。設定方法はheroDataのコメント参照
+  faqCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=86208624&single=true&output=csv",       // Q&A。設定方法はfaqDataのコメント参照
+  supportCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=1373268438&single=true&output=csv",   // 企業様向けご支援案内。設定方法はsupportDataのコメント参照
 
   newsMaxItems: 6,
   currentSeason: "" // 空欄なら自動判定。手動で固定したい年度がある時だけ "2027" のように入力する

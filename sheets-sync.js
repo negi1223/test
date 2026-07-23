@@ -70,7 +70,7 @@
   ];
 
   const SPONSOR_KEYWORDS = [
-    ["imageUrl", "ロゴ"],
+    ["imageUrl", ["ロゴ", "写真"]],
     ["address", "住所"],
     ["description", "事業内容"],
     ["url", "URL"],
@@ -157,8 +157,13 @@
   function resolveColumns(headers, keywordEntries) {
     const remaining = headers.slice();
     const resolved = {};
-    keywordEntries.forEach(([key, keyword]) => {
-      const idx = remaining.findIndex((h) => includesLoose(h, keyword));
+    keywordEntries.forEach(([key, keywordOrList]) => {
+      const keywords = Array.isArray(keywordOrList) ? keywordOrList : [keywordOrList];
+      let idx = -1;
+      for (const kw of keywords) {
+        idx = remaining.findIndex((h) => includesLoose(h, kw));
+        if (idx !== -1) break;
+      }
       if (idx !== -1) {
         resolved[key] = remaining[idx];
         remaining.splice(idx, 1); // 一度使った列は他の項目の候補から外す

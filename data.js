@@ -49,9 +49,9 @@ const sheetsSyncConfig = {
   // 更新頻度が低いもの（Googleフォームは経由せず、スプレッドシートを直接編集する）
   // 空欄（""）のままなら、今まで通り下の playersData / staffData / sponsorsData が使われます。
   // 設定方法は、このファイルの各データの説明コメント（220行目あたり〜）を参照してください
-  playersCsvUrl: "",
-  staffCsvUrl: "",
-  sponsorsCsvUrl: "",
+  playersCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=210235188&single=true&output=csv",
+  staffCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=1706764530&single=true&output=csv",
+  sponsorsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=2145349521&single=true&output=csv",
 
   newsMaxItems: 6,
   currentSeason: "" // 空欄なら自動判定。手動で固定したい年度がある時だけ "2027" のように入力する

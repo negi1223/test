@@ -316,7 +316,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   ========================================================= */
   const playerGrid = document.getElementById('playerGrid');
   const filterEmpty = document.getElementById('filterEmpty');
-  const effectivePlayersData = window.__syncedPlayersData || (typeof playersData !== 'undefined' ? playersData : []);
+  const rawPlayersData = window.__syncedPlayersData || (typeof playersData !== 'undefined' ? playersData : []);
+  // 入力された順番がバラバラでも、学年順（4年→3年→2年→1年→スタッフ）に並べる
+  const gradeOrder = { '4年': 0, '3年': 1, '2年': 2, '1年': 3, 'スタッフ': 4 };
+  const effectivePlayersData = [...rawPlayersData].sort((a, b) => {
+    const ra = gradeOrder[a.grade] ?? 99;
+    const rb = gradeOrder[b.grade] ?? 99;
+    return ra - rb;
+  });
   if (playerGrid) {
     playerGrid.innerHTML = effectivePlayersData.map((p) => `
       <article class="player-card${p.isStaff ? ' player-card--staff' : ''}" data-grade="${escapeHtml(p.grade)}">

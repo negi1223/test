@@ -63,21 +63,18 @@
 
   const PLAYER_KEYWORDS = [
     ["photo", "写真"],
-    ["isStaffRaw", "スタッフ"],
-    ["initial", "イニシャル"],
+    ["isStaffRaw", "マネージャー"],
     ["sub", "出身"],
-    ["role", "役職"],
     ["grade", "学年"],
     ["name", "名前"]
   ];
 
   const SPONSOR_KEYWORDS = [
     ["imageUrl", "ロゴ"],
-    ["shortName", "短い"],
     ["address", "住所"],
     ["description", "事業内容"],
     ["url", "URL"],
-    ["name", "企業名"]
+    ["name", "名前"]
   ];
 
   // ---- タイムアウト付きfetch ----
@@ -135,12 +132,15 @@
   // skipExampleRow を true にすると、1行目（見出し）の次の行（2行目）を
   // 「記入例」とみなして読み飛ばす。選手・スタッフ・スポンサーのように、
   // フォームを介さず直接編集するシートで、2行目に記入例を置けるようにするため
+  // skipExampleRow が true の時は「1行目＝記入例（読み飛ばす）／2行目＝見出し／
+  // 3行目以降＝データ」という並びとして読む（選手・スタッフ・スポンサー用）。
+  // false の時は今まで通り「1行目＝見出し／2行目以降＝データ」（ニュース・試合結果用）
   function csvToTable(csvText, skipExampleRow) {
     const rows = parseCsv(csvText).filter((r) => r.some((v) => v !== ""));
-    if (rows.length < 2) return { headers: [], objects: [] };
-    const headers = rows[0].map((h) => h.trim());
-    const dataRows = skipExampleRow ? rows.slice(2) : rows.slice(1);
-    const objects = dataRows.map((r) => {
+    const headerRowIndex = skipExampleRow ? 1 : 0;
+    if (rows.length <= headerRowIndex) return { headers: [], objects: [] };
+    const headers = rows[headerRowIndex].map((h) => h.trim());
+    const objects = rows.slice(headerRowIndex + 1).map((r) => {
       const obj = {};
       headers.forEach((h, i) => { obj[h] = (r[i] || "").trim(); });
       return obj;
@@ -148,13 +148,17 @@
     return { headers, objects };
   }
 
+  // 大文字小文字の違いを無視してキーワード一致させる
+  const includesLoose = (haystack, needle) =>
+    haystack.toLowerCase().includes(needle.toLowerCase());
+
   // headers（実際にシートに並んでいる列名）の中から、keywordEntries の
   // キーワードを含む列を探して { 項目名: 実際の列名 } の対応表を作る
   function resolveColumns(headers, keywordEntries) {
     const remaining = headers.slice();
     const resolved = {};
     keywordEntries.forEach(([key, keyword]) => {
-      const idx = remaining.findIndex((h) => h.includes(keyword));
+      const idx = remaining.findIndex((h) => includesLoose(h, keyword));
       if (idx !== -1) {
         resolved[key] = remaining[idx];
         remaining.splice(idx, 1); // 一度使った列は他の項目の候補から外す
@@ -166,6 +170,14 @@
   }
 
   const getVal = (obj, cols, key) => (cols[key] ? (obj[cols[key]] || "") : "");
+
+  // "kaneko.jpg" のように入力されても、自動で "images/kaneko.jpg" に補完する
+  // （既に "images/" から書かれていれば、それはそのまま使う）
+  const resolveImagePath = (raw) => {
+    const v = String(raw || "").trim();
+    if (!v) return "";
+    return v.startsWith("images/") ? v : `images/${v}`;
+  };
 
   function buildNewsData(headers, objects) {
     const cols = resolveColumns(headers, NEWS_KEYWORDS);
@@ -243,7 +255,7 @@
         role: getVal(o, cols, "role"),
         name: getVal(o, cols, "name"),
         comment: getVal(o, cols, "comment"),
-        photo: getVal(o, cols, "photo")
+        photo: resolveImagePath(getVal(o, cols, "photo"))
       }))
       .filter((s) => s.name)
       .slice(0, SAFETY_MAX_ROWS);
@@ -258,24 +270,35 @@
         const isStaff = /はい|yes|true|する/i.test(isStaffRaw) && !/いいえ|no|しない/i.test(isStaffRaw);
 
         const name = getVal(o, cols, "name");
-        const grade = getVal(o, cols, "grade");
+        const initial = name.charAt(0); // イニシャルは常に名前の1文字目
 
-        // イニシャルが空欄なら、名前の1文字目を自動で使う
-        const initialRaw = getVal(o, cols, "initial");
-        const initial = initialRaw || name.charAt(0);
+        // 学年は「1」「2」「3」「4」（「1年」等でもOK）で入力してもらい、
+        // そこから内部用の学年キー（フィルター用）と表示文字（○年生）を作る
+        const gradeRaw = getVal(o, cols, "grade");
+        const gradeNumMatch = gradeRaw.match(/\d+/);
+        const gradeNum = gradeNumMatch ? gradeNumMatch[0] : "";
 
-        // 表示する役職が空欄なら、学年から自動で「○年生」を作る
-        // （マネージャーなど、学年と表示を変えたい人だけ手入力すればOK）
-        const roleRaw = getVal(o, cols, "role");
-        const role = roleRaw || (grade ? `${grade}生` : "");
+        const schoolRaw = getVal(o, cols, "sub");
+
+        let grade, role, sub;
+        if (isStaff) {
+          // マネージャーの場合は、学年・出身校の入力があっても無視する
+          grade = "スタッフ";
+          role = "マネージャー";
+          sub = "";
+        } else {
+          grade = gradeNum ? `${gradeNum}年` : "";
+          role = gradeNum ? `${gradeNum}年生` : "";
+          sub = schoolRaw ? `出身：${schoolRaw}` : "";
+        }
 
         return {
           name,
           initial,
           grade,
           role,
-          sub: getVal(o, cols, "sub"),
-          photo: getVal(o, cols, "photo"),
+          sub,
+          photo: resolveImagePath(getVal(o, cols, "photo")),
           isStaff
         };
       })
@@ -286,14 +309,18 @@
   function buildSponsorsData(headers, objects) {
     const cols = resolveColumns(headers, SPONSOR_KEYWORDS);
     return objects
-      .map((o) => ({
-        name: getVal(o, cols, "name"),
-        shortName: getVal(o, cols, "shortName"),
-        address: getVal(o, cols, "address"),
-        description: getVal(o, cols, "description"),
-        url: getVal(o, cols, "url"),
-        imageUrl: getVal(o, cols, "imageUrl")
-      }))
+      .map((o) => {
+        // 「企業名」と「短い表示名」は分けず、1つの「表示する名前」を両方に使う
+        const displayName = getVal(o, cols, "name");
+        return {
+          name: displayName,
+          shortName: displayName,
+          address: getVal(o, cols, "address"),
+          description: getVal(o, cols, "description"),
+          url: getVal(o, cols, "url"),
+          imageUrl: resolveImagePath(getVal(o, cols, "imageUrl"))
+        };
+      })
       .filter((s) => s.name)
       .slice(0, SAFETY_MAX_ROWS);
   }

@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  // ブラウザが「更新（リロード）前のスクロール位置を覚えておいて自動で戻す」機能を無効にする。
+  // これが有効なままだと、こちらでJSから一番上に戻しても、ブラウザが後から
+  // 元のスクロール位置に戻してしまうことがあるため、できるだけ早い段階で止めておく
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+</script>
 <title>徳島文理大学男子サッカー部 | 公式サイト（リニューアル版）</title>
 <meta name="description" content="徳島文理大学男子サッカー部の公式サイト。2025年より四国大学サッカーリーグ2部に参戦。ニュース、試合日程、選手・スタッフ紹介はこちらから。">
 <link rel="preconnect" href="https://fonts.googleapis.com">

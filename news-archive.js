@@ -17,6 +17,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
 
+  // ニュース1件ごとの「日付＋タイトル」から、ページをまたいでも同じ値になる
+  // 識別子（slug）を作る（script.jsと全く同じロジック。ホームからのリンクの
+  // #news-item-◯◯ と、このページで実際に作るidを一致させるため）
+  const newsItemSlug = (item) => {
+    const raw = `${item.date}__${item.title}`;
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      hash = (hash * 31 + raw.charCodeAt(i)) | 0;
+    }
+    return 'n' + Math.abs(hash).toString(36);
+  };
+
   // "2026.06.01"（年が先）と "6/1/2026"（Googleフォームの日付質問が
   // 月-日-年の順で出力する場合）のどちらでも読み取れるようにする（script.jsと同じロジック）
   const parseDateValue = (str) => {
@@ -52,13 +64,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // --- カードを描画（ホームの .news-card と同じ構造＋開閉ボタン＋詳細パネル） ---
-  list.innerHTML = allNews.map((item, i) => {
-    const detailId = `news-detail-${i}`;
-    const toggleId = `news-toggle-${i}`;
+  list.innerHTML = allNews.map((item) => {
+    const slug = newsItemSlug(item);
+    const articleId = `news-item-${slug}`;
+    const detailId = `news-detail-${slug}`;
+    const toggleId = `news-toggle-${slug}`;
     // 「詳しい内容」が未入力の場合は、ホームと同じ短い説明文をそのまま表示する
     const detail = item.detail || item.text || '';
     return `
-      <article class="news-card" data-tag="${escapeHtml(item.tag)}" data-pinned="${item.pinned ? 'true' : 'false'}">
+      <article class="news-card" id="${articleId}" data-tag="${escapeHtml(item.tag)}" data-pinned="${item.pinned ? 'true' : 'false'}">
         <span class="news-tag-group">
           <span class="news-tag news-tag--${escapeHtml(item.tag)}">${escapeHtml(newsTagLabel[item.tag] || 'お知らせ')}</span>
           ${item.pinned ? '<span class="news-tag-pinned">重要</span>' : ''}
@@ -69,6 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <button class="news-more" type="button" aria-expanded="false" aria-controls="${detailId}" id="${toggleId}">詳しく見る</button>
         <div class="news-detail" id="${detailId}" role="region" aria-labelledby="${toggleId}" hidden>
           <p>${escapeHtml(detail)}</p>
+          ${item.image ? `<img class="news-detail-image" data-src="${escapeHtml(item.image)}" alt="" loading="lazy">` : ''}
           ${item.link ? `<p><a href="${escapeHtml(item.link)}" target="_blank" rel="noopener">投稿を見る →</a></p>` : ''}
         </div>
       </article>
@@ -81,7 +96,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       const panel = document.getElementById(toggle.getAttribute('aria-controls'));
       const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
       toggle.setAttribute('aria-expanded', String(!isExpanded));
-      if (panel) panel.hidden = isExpanded;
+      if (!panel) return;
+      panel.hidden = isExpanded;
+      // 画像は「詳しく見る」を初めて押した時にだけ読み込む。
+      // data-src のままにしておけば、閉じている間はブラウザが一切通信しないため、
+      // ページ表示自体が画像のせいで重くなる心配がない。
+      if (!isExpanded) {
+        const img = panel.querySelector('img[data-src]');
+        if (img) {
+          img.src = img.dataset.src;
+          img.removeAttribute('data-src');
+        }
+      }
     });
   });
 
@@ -110,4 +136,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (empty) empty.hidden = visibleCount !== 0;
     });
   });
+
+  // --- ホームの「詳しく見る」から #news-item-◯◯ 付きでアクセスしてきた場合、
+  //     該当ニュースのアコーディオンを自動で開いて、その位置までスクロールする ---
+  const targetId = decodeURIComponent(window.location.hash || '').replace('#', '');
+  if (targetId) {
+    const targetArticle = document.getElementById(targetId);
+    if (targetArticle) {
+      const targetToggle = targetArticle.querySelector('.news-more');
+      if (targetToggle && targetToggle.getAttribute('aria-expanded') !== 'true') {
+        targetToggle.click(); // 既存の開閉処理をそのまま利用して開く（画像の遅延読み込みも一緒に動く）
+      }
+      targetArticle.scrollIntoView({ block: 'start' });
+    }
+  }
 });

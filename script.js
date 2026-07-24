@@ -25,6 +25,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
 
+  // ニュース1件ごとの「日付＋タイトル」から、ページをまたいでも同じ値になる
+  // 識別子（slug）を作る。news.html側の該当ニュースへリンクするために使う
+  // （※news.htmlは全件、ホームは最新分のみの表示なので、単純な配列の番号では
+  //   同じニュースでもページによって番号がズレてしまうため）
+  const newsItemSlug = (item) => {
+    const raw = `${item.date}__${item.title}`;
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      hash = (hash * 31 + raw.charCodeAt(i)) | 0;
+    }
+    return 'n' + Math.abs(hash).toString(36);
+  };
+
   /* =========================================================
      ロゴをクリックしたら一番上へスクロール
      （ヘッダーが sticky（常に上に張り付く）になっていると、
@@ -330,7 +343,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <time class="news-date">${escapeHtml(item.date)}</time>
         <h3 class="news-title">${escapeHtml(item.title)}</h3>
         <p class="news-text">${escapeHtml(item.text)}</p>
-        ${item.link ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener" class="news-more">詳しく見る</a>` : ''}
+        ${(item.detail || item.image) ? `<a href="news.html#news-item-${newsItemSlug(item)}" class="news-more">詳しく見る</a>` : ''}
       </article>
     `).join('');
   }

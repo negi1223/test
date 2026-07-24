@@ -37,9 +37,10 @@
     ["tag", "種類"],
     ["title", "タイトル"],
     ["detail", "詳しい"],
-    ["text", "本文"],
+    ["text", ["簡単な説明", "本文"]],
     ["pinned", "固定"],
-    ["link", "リンク"]
+    ["link", "リンク"],
+    ["image", ["画像", "写真"]]
   ];
   const NEWS_TAG_MAP = { "試合": "match", "お知らせ": "info", "募集": "recruit" };
 
@@ -207,6 +208,25 @@
     return v.startsWith("images/") ? v : `images/${v}`;
   };
 
+  // Googleフォームの「ファイルアップロード」質問は、回答スプレッドシートに
+  // Googleドライブの共有リンク（例："https://drive.google.com/open?id=XXXX" や
+  // ".../file/d/XXXX/view?usp=drivesdk"）がそのまま入力される。
+  // これを、元画像そのものではなく「軽量なサムネイル」を返すURL形式に変換する
+  // （sz=w800 は幅800pxのサムネイルという意味。元画像が大きくてもここで軽くなる）。
+  // ※Googleドライブの正式なCDN機能ではないため、将来的にこの形式が使えなくなる
+  //   可能性はゼロではないが、装飾目的のニュース画像用途としては許容している。
+  const resolveDriveImage = (raw) => {
+    const v = String(raw || "").trim();
+    if (!v) return "";
+    // すでに images/ 配下のファイル名など、Googleドライブのリンクでない場合はそのまま使う
+    if (!v.includes("drive.google.com")) return v;
+    // URLの中からファイルIDを取り出す（"id=XXXX" と "/d/XXXX/" の両方の形式に対応）
+    const idMatch = v.match(/[?&]id=([^&]+)/) || v.match(/\/d\/([^/]+)/);
+    const fileId = idMatch ? idMatch[1] : "";
+    if (!fileId) return "";
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+  };
+
   function buildNewsData(headers, objects) {
     const cols = resolveColumns(headers, NEWS_KEYWORDS);
     return objects
@@ -221,9 +241,10 @@
           date: getVal(o, cols, "date"),
           title: getVal(o, cols, "title"),
           text,
-          detail: detail || text, // 「詳しい内容」が未入力なら本文をそのまま使う
+          detail, // 「詳しい内容」が未入力なら空のまま（本文へのフォールバックは表示側で行う）
           pinned,
-          link: getVal(o, cols, "link")
+          link: getVal(o, cols, "link"),
+          image: resolveDriveImage(getVal(o, cols, "image"))
         };
       })
       .filter((n) => n.title)
@@ -424,8 +445,11 @@
       }
 
       // 2. トップの活動写真（「トップ」＋「写真」または「画像」を含む行）
+      //    セルの中でAlt+Enterで複数行入力すると、自動でスライドショーになる
+      //    （1行だけなら今まで通り静止画1枚）
       if (label.includes("トップ") && (label.includes("写真") || label.includes("画像"))) {
-        result.heroPhoto = resolveImagePath(value);
+        const lines = value.split(/\r?\n/).map((v) => v.trim()).filter((v) => v);
+        result.heroPhoto = lines.length > 1 ? lines.map(resolveImagePath) : resolveImagePath(lines[0] || value);
         return;
       }
 

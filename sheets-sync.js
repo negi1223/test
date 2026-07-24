@@ -81,7 +81,8 @@
   // 「行」ごとに読み取る（対応する項目名は buildSettingsData 側で判定する）
   const SETTINGS_ROW_KEYWORDS = [
     ["item", "項目"],
-    ["value", "内容"]
+    ["value", "内容"],
+    ["note", "補足"]
   ];
 
   const FAQ_KEYWORDS = [
@@ -352,33 +353,97 @@
       .slice(0, SAFETY_MAX_ROWS);
   }
 
-  // 「その他」シート：1列目＝項目名／2列目＝内容 の行を、項目名に含まれる
-  // キーワードで判定して settings オブジェクトに詰め直す。
-  // 新しい項目を増やしたい時は、ここに1行足すだけで対応できる
+  // 「その他」シート：1列目＝項目名／2列目＝内容／3列目＝補足 の行を読み取る。
+  //
+  // 判定の優先順位（上から順にチェックし、最初に当てはまったものを使う）：
+  //   1. 項目名が「Aboutの「◯◯」」の形（かぎカッコ入り）なら、
+  //      ◯◯という名前のAboutの項目カードとして扱う。
+  //      ただし「部の紹介文」だけは特別で、Aboutの紹介文（段落）として扱う。
+  //   1-2. 「メニューの「News」」のような形は、ヘッダーのメニュー文字を差し替える
+  //   1-3. 「News」「Schedule」「Members」「Q&A」「Sponsors」の後にかぎカッコが
+  //      続く形（例：「Membersの「新人紹介」」）は、そのセクションの下に
+  //      「◯◯：内容」という補足カードとして自動的に追加表示される
+  //      → これが「新しい項目を増やしても自動対応できる仕組み」です。
+  //        6つのセクション名（News/About/Schedule/Members/Q&A/Sponsors）の
+  //        どれでも同じ書き方で使え、コード側の修正は不要です
+  //   2. それ以外は、決まったキーワードで判定する（下のリストを参照）
+  const SECTION_EXTRA_PREFIXES = [
+    ["news", ["News", "ニュース"]],
+    ["schedule", ["Schedule", "試合日程", "スケジュール"]],
+    ["members", ["Members", "メンバー"]],
+    ["faq", ["Q&A", "QA", "よくある質問"]],
+    ["sponsors", ["Sponsors", "スポンサー"]]
+  ];
   const SETTINGS_ROW_MATCHERS = [
-    ["affiliation", "所属"],
-    ["heroPhoto", ["ヒーロー画像", "トップ画像", "ヒーロー写真"]],
     ["slogan", "スローガン"],
-    ["aboutText", ["紹介文", "部の紹介"]],
-    ["venue", "活動場所"],
-    ["schedule", "活動日時"],
+    ["affiliation", "所属"], // 「Aboutの「所属リーグ」」は1.で先に処理されるので、ここに来るのは「トップ画面の所属」系だけ
     ["adviserEmail", "顧問"],
-    ["sponsorEmail", ["スポンサー", "協賛"]]
+    ["sponsorEmail", ["企業様", "スポンサー", "協賛"]],
+    ["sponsorFormUrl", "フォーム"]
   ];
   function buildSettingsData(headers, objects) {
     const cols = resolveColumns(headers, SETTINGS_ROW_KEYWORDS);
-    const result = {};
+    const result = { aboutFacts: {}, sectionExtras: {} };
     objects.forEach((o) => {
       const label = getVal(o, cols, "item");
       const value = getVal(o, cols, "value");
+      const note = getVal(o, cols, "note");
       if (!label || !value) return;
+      const bracketMatch = label.match(/「(.+?)」/);
+
+      // 1. 「Aboutの「◯◯」」の形は、◯◯をそのままAboutのカード名として扱う
+      if (label.includes("About") && bracketMatch) {
+        const innerLabel = bracketMatch[1];
+        if (innerLabel.includes("紹介文") || innerLabel.includes("部の紹介")) {
+          result.aboutText = value;
+        } else {
+          result.aboutFacts[innerLabel] = { value, note };
+        }
+        return;
+      }
+
+      // 1-2. 「メニューの「News」」のような形は、ヘッダーのメニュー文字を差し替える
+      if ((label.includes("メニュー") || label.includes("ヘッダー")) && bracketMatch) {
+        const menuKey = bracketMatch[1];
+        result.navLabels = result.navLabels || {};
+        result.navLabels[menuKey] = value;
+        return;
+      }
+
+      // 1-3. 「News」「Schedule」「Members」「Q&A」「Sponsors」＋かぎカッコの形は、
+      //      そのセクションの補足カードとして自動的に追加する
+      if (bracketMatch) {
+        const sectionMatch = SECTION_EXTRA_PREFIXES.find(([, kws]) => kws.some((k) => label.includes(k)));
+        if (sectionMatch) {
+          const sectionKey = sectionMatch[0];
+          const innerLabel = bracketMatch[1];
+          result.sectionExtras[sectionKey] = result.sectionExtras[sectionKey] || {};
+          result.sectionExtras[sectionKey][innerLabel] = { value, note };
+          return;
+        }
+      }
+
+      // 2. トップの活動写真（「トップ」＋「写真」または「画像」を含む行）
+      if (label.includes("トップ") && (label.includes("写真") || label.includes("画像"))) {
+        result.heroPhoto = resolveImagePath(value);
+        return;
+      }
+
+      // 3. 決まったキーワードでの判定
       const match = SETTINGS_ROW_MATCHERS.find(([, kw]) => {
         const kws = Array.isArray(kw) ? kw : [kw];
         return kws.some((k) => includesLoose(label, k));
       });
-      if (!match) return;
+      if (!match) return; // どれにも当てはまらない行は無視される
       const key = match[0];
-      result[key] = key === "heroPhoto" ? resolveImagePath(value) : value;
+      if (key === "affiliation") {
+        // トップ画面の「所属」は、B列を数字部分・C列を単位部分として別々に使う
+        // （例：B="SUL" C="2部" → 表示は "SUL" + 小さく "2部"）
+        result.affiliationValue = value;
+        result.affiliationSuffix = note;
+      } else {
+        result[key] = value;
+      }
     });
     return result;
   }

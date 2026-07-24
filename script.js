@@ -81,9 +81,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.js-instagram-handle').forEach((el) => { el.textContent = siteData.instagramHandle; });
     document.querySelectorAll('.js-x-link').forEach((el) => { el.href = siteData.xUrl; });
 
-    // Googleフォーム（企業様・スポンサー様向け）※埋め込みプレビューは廃止し、ボタンリンクのみ
-    const gformButton = document.getElementById('gformButton');
-    if (gformButton) gformButton.href = siteData.sponsorFormUrl;
+    // Googleフォームのボタン・メールアドレスは、「その他」シートの内容で
+    // 上書きされる可能性があるため、後段（同期完了後）でまとめて設定する
 
     // フッター著作権表記
     const footerCopy = document.getElementById('footerCopy');
@@ -128,6 +127,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   ========================================================= */
   const settings = window.__syncedSettings || {};
 
+  // 「その他」シートの「◯◯セクションの「△△」」という行を、各セクションの
+  // 下に補足カードとして表示する（News/Schedule/Members/Q&A/Sponsors共通）
+  const renderSectionExtras = (containerId, sectionKey) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const extras = (settings.sectionExtras && settings.sectionExtras[sectionKey]) || {};
+    const labels = Object.keys(extras);
+    el.innerHTML = labels.map((label) => {
+      const item = extras[label];
+      return `
+        <div class="fact-card">
+          <dt>${escapeHtml(label)}</dt>
+          <dd>${escapeHtml(item.value)}${item.note ? `<br><span class="fact-note">${escapeHtml(item.note)}</span>` : ''}</dd>
+        </div>
+      `;
+    }).join('');
+  };
+  renderSectionExtras('newsExtras', 'news');
+  renderSectionExtras('scheduleExtras', 'schedule');
+  renderSectionExtras('membersExtras', 'members');
+  renderSectionExtras('faqExtras', 'faq');
+  renderSectionExtras('sponsorsExtras', 'sponsors');
+
   // 現役部員数は「選手＋マネージャーの合計」を自動計算する（手入力不要）
   const rawPlayersDataForCount = window.__syncedPlayersData || (typeof playersData !== 'undefined' ? playersData : []);
   const totalMemberCount = String(rawPlayersDataForCount.length);
@@ -138,8 +160,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (s.label === '現役部員') {
         return { ...s, value: totalMemberCount };
       }
-      if (s.label === '所属' && settings.affiliation) {
-        return { ...s, value: settings.affiliation, suffix: '' };
+      if (s.label === '所属' && settings.affiliationValue) {
+        return { ...s, value: settings.affiliationValue, suffix: settings.affiliationSuffix || '' };
       }
       return s;
     });
@@ -168,10 +190,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const factsEl = document.getElementById('aboutFacts');
     if (factsEl && aboutData.facts) {
+      const aboutFactsOverrides = settings.aboutFacts || {};
+      // 既存のカードは該当する上書きがあれば差し替え、
+      // 「その他」シートにしかない新しいラベルはカードとして追加する
+      // （＝ Aboutの「◯◯」という行を1つ足すだけで、新しいカードが自動で増える）
+      const usedLabels = new Set();
       const mergedFacts = aboutData.facts.map((f) => {
-        if (f.label === '活動場所' && settings.venue) return { ...f, value: settings.venue };
-        if (f.label === '活動日時' && settings.schedule) return { ...f, value: settings.schedule };
-        return f;
+        usedLabels.add(f.label);
+        const override = aboutFactsOverrides[f.label];
+        return override ? { ...f, value: override.value, note: override.note || '' } : f;
+      });
+      Object.keys(aboutFactsOverrides).forEach((label) => {
+        if (!usedLabels.has(label)) {
+          mergedFacts.push({ label, value: aboutFactsOverrides[label].value, note: aboutFactsOverrides[label].note || '' });
+        }
       });
       factsEl.innerHTML = mergedFacts.map((f) => `
         <div class="fact-card">
@@ -197,6 +229,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   if (typeof siteData !== 'undefined' && settings.adviserEmail) {
     siteData.adviserEmail = settings.adviserEmail; // {adviserName}等のトークンで今後使う場合に備えて反映
+  }
+
+  // 企業様向けお問い合わせフォームのURL（「その他」シートで上書き可能）
+  const gformButton = document.getElementById('gformButton');
+  if (gformButton) gformButton.href = settings.sponsorFormUrl || (typeof siteData !== 'undefined' ? siteData.sponsorFormUrl : '#');
+
+  // ヘッダーメニューの文字（「その他」シートで「ヘッダーの「News」」のように上書き可能）。
+  // かぎカッコの中身は完全一致（大文字小文字は問わない）で探す
+  const navKeyMap = {
+    navNews: 'News', navAbout: 'About', navSchedule: 'Schedule',
+    navMembers: 'Members', navFaq: 'Q&A', navSponsors: 'Sponsors'
+  };
+  if (settings.navLabels) {
+    Object.keys(navKeyMap).forEach((elId) => {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const defaultLabel = navKeyMap[elId];
+      const overrideKey = Object.keys(settings.navLabels).find(
+        (k) => k.trim().toLowerCase() === defaultLabel.toLowerCase()
+      );
+      if (overrideKey) el.textContent = settings.navLabels[overrideKey];
+    });
   }
 
   const settingsSyncWarning = document.getElementById('settingsSyncWarning');

@@ -40,12 +40,12 @@
 
     <nav class="primary-nav" id="primaryNav">
       <ul>
-        <li><a href="#news" class="nav-link">News</a></li>
-        <li><a href="#about" class="nav-link">About</a></li>
-        <li><a href="#schedule" class="nav-link">Schedule</a></li>
-        <li><a href="#members" class="nav-link">Members</a></li>
-        <li><a href="#faq" class="nav-link">Q&amp;A</a></li>
-        <li><a href="#sponsors" class="nav-link">Sponsors</a></li>
+        <li><a href="#news" class="nav-link" id="navNews">News</a></li>
+        <li><a href="#about" class="nav-link" id="navAbout">About</a></li>
+        <li><a href="#schedule" class="nav-link" id="navSchedule">Schedule</a></li>
+        <li><a href="#members" class="nav-link" id="navMembers">Members</a></li>
+        <li><a href="#faq" class="nav-link" id="navFaq">Q&amp;A</a></li>
+        <li><a href="#sponsors" class="nav-link" id="navSponsors">Sponsors</a></li>
       </ul>
       <a href="#" target="_blank" rel="noopener" class="btn btn-cta nav-cta js-instagram-link">体験・入部はこちら</a>
     </nav>
@@ -97,6 +97,9 @@
       <div class="news-grid" id="newsGrid">
         <!-- data.js の newsData がここに自動で表示されます -->
       </div>
+      <div class="section-extras" id="newsExtras">
+        <!-- 「その他」シートで「Newsの「◯◯」」という行を追加すると、ここに自動で表示されます -->
+      </div>
     </div>
   </section>
 
@@ -147,6 +150,9 @@
       <p class="results-note">
         ※試合結果の詳細は公式Instagram（<a href="#" target="_blank" rel="noopener" class="js-instagram-link"><span class="js-instagram-handle">@bunri.uni</span></a>）で随時発信しています。
       </p>
+      <div class="section-extras section-extras--light" id="scheduleExtras">
+        <!-- 「その他」シートで「Scheduleの「◯◯」」という行を追加すると、ここに自動で表示されます -->
+      </div>
     </div>
   </section>
 
@@ -176,6 +182,9 @@
         <!-- data.js の playersData がここに自動で表示されます -->
       </div>
       <p class="filter-empty" id="filterEmpty" hidden>該当する部員がいません。</p>
+      <div class="section-extras" id="membersExtras">
+        <!-- 「その他」シートで「Membersの「◯◯」」という行を追加すると、ここに自動で表示されます -->
+      </div>
     </div>
   </section>
 
@@ -188,6 +197,9 @@
       <p class="sync-warning" id="faqSyncWarning" hidden>⚠ 最新の情報を読み込めませんでした。表示中の内容は最新でない可能性があります。</p>
       <div class="accordion" id="faqAccordion">
         <!-- data.js の faqData がここに自動で表示されます -->
+      </div>
+      <div class="section-extras" id="faqExtras">
+        <!-- 「その他」シートで「Q&amp;Aの「◯◯」」という行を追加すると、ここに自動で表示されます -->
       </div>
     </div>
   </section>
@@ -204,6 +216,9 @@
       <ul class="sponsor-grid" id="sponsorGrid">
         <!-- data.js の sponsorsData がここに自動で表示されます -->
       </ul>
+      <div class="section-extras" id="sponsorsExtras">
+        <!-- 「その他」シートで「Sponsorsの「◯◯」」という行を追加すると、ここに自動で表示されます -->
+      </div>
 
       <div class="sponsor-support">
         <h3 class="sub-title">企業様向けご支援案内</h3>

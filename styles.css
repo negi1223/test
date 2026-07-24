@@ -550,6 +550,23 @@ input, textarea, select{ font-family: inherit; font-size: 1rem; }
   gap: 14px;
   margin: 0;
 }
+/* 「その他」シートで各セクションに自由に追加できる補足カード
+   （News/Schedule/Members/Q&A/Sponsors共通。中身が無い時は何も表示されない） */
+.section-extras{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.section-extras:empty{ display: none; margin: 0; }
+.section-extras--light .fact-card{ background: transparent; border-color: rgba(255,255,255,.35); color: var(--white); }
+.section-extras--light .fact-card dt{ color: var(--red); }
+.section-extras--light .fact-note{ color: rgba(255,255,255,.6); }
+@media (max-width: 640px){
+  .section-extras{ grid-template-columns: 1fr; }
+}
 .fact-card{
   background: var(--white);
   border: 1.5px solid var(--ink);

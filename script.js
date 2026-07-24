@@ -184,14 +184,76 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const heroPhotoWrap = document.getElementById('heroPhoto');
-  const heroPhotoPath = settings.heroPhoto || (typeof heroData !== 'undefined' ? heroData.photo : '');
-  if (heroPhotoWrap && heroPhotoPath) {
-    const img = document.createElement('img');
-    img.src = heroPhotoPath;
-    img.alt = (typeof heroData !== 'undefined' && heroData.photoAlt) || '活動中の様子';
-    img.className = 'hero-photo-img';
-    img.onerror = () => img.remove(); // 画像が見つからない場合はダミー表示のまま
-    heroPhotoWrap.prepend(img);
+  const heroPhotoRaw = settings.heroPhoto || (typeof heroData !== 'undefined' ? heroData.photo : '');
+  // 文字列（1枚）でも配列（複数枚＝スライドショー）でも同じように扱えるよう、
+  // ここで必ず配列にそろえる（空文字は除く）
+  const heroPhotoList = (Array.isArray(heroPhotoRaw) ? heroPhotoRaw : [heroPhotoRaw]).filter(Boolean);
+
+  if (heroPhotoWrap && heroPhotoList.length > 0) {
+    // 既存のダミー表示（TEAM PHOTO）は写真が用意できたら消す
+    const placeholder = heroPhotoWrap.querySelector('.photo-placeholder');
+    if (placeholder) placeholder.remove();
+
+    const slidesHtml = heroPhotoList.map((src, i) => `
+      <div class="hero-slide${i === 0 ? ' is-active' : ''}">
+        <img class="hero-photo-img" src="${escapeHtml(src)}" alt="${escapeHtml((typeof heroData !== 'undefined' && heroData.photoAlt) || '活動中の様子')}" loading="${i === 0 ? 'eager' : 'lazy'}">
+      </div>
+    `).join('');
+    heroPhotoWrap.insertAdjacentHTML('afterbegin', slidesHtml);
+
+    // 写真が2枚以上あるときだけ、自動で切り替わるスライドショー＋クリックできる点を表示する
+    if (heroPhotoList.length > 1) {
+      const slideEls = Array.from(heroPhotoWrap.querySelectorAll('.hero-slide'));
+
+      const dotsWrap = document.createElement('div');
+      dotsWrap.className = 'hero-dots';
+      dotsWrap.setAttribute('role', 'tablist');
+      dotsWrap.setAttribute('aria-label', 'トップ写真の切り替え');
+      dotsWrap.innerHTML = heroPhotoList.map((_, i) => `
+        <button type="button" class="hero-dot${i === 0 ? ' is-active' : ''}" aria-label="${i + 1}枚目の写真を表示" role="tab" aria-selected="${i === 0}"></button>
+      `).join('');
+      heroPhotoWrap.appendChild(dotsWrap);
+      const dotEls = Array.from(dotsWrap.querySelectorAll('.hero-dot'));
+
+      let activeIndex = 0;
+      const showSlide = (nextIndex) => {
+        slideEls[activeIndex]?.classList.remove('is-active');
+        dotEls[activeIndex]?.classList.remove('is-active');
+        dotEls[activeIndex]?.setAttribute('aria-selected', 'false');
+        activeIndex = nextIndex;
+        slideEls[activeIndex]?.classList.add('is-active');
+        dotEls[activeIndex]?.classList.add('is-active');
+        dotEls[activeIndex]?.setAttribute('aria-selected', 'true');
+      };
+
+      const AUTO_ADVANCE_MS = 5500;
+      let timer = setInterval(() => {
+        showSlide((activeIndex + 1) % heroPhotoList.length);
+      }, AUTO_ADVANCE_MS);
+
+      // 点をクリックしたら、そこで自動切り替えのタイマーをリセットして手動の切り替えを優先する
+      dotEls.forEach((dot, i) => {
+        dot.addEventListener('click', () => {
+          if (i === activeIndex) return;
+          clearInterval(timer);
+          showSlide(i);
+          timer = setInterval(() => {
+            showSlide((activeIndex + 1) % heroPhotoList.length);
+          }, AUTO_ADVANCE_MS);
+        });
+      });
+
+      // タブが非表示の間（別タブを見ている間）は切り替えを止めて、無駄な負荷をかけない
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          clearInterval(timer);
+        } else {
+          timer = setInterval(() => {
+            showSlide((activeIndex + 1) % heroPhotoList.length);
+          }, AUTO_ADVANCE_MS);
+        }
+      });
+    }
   }
 
   if (typeof aboutData !== 'undefined') {

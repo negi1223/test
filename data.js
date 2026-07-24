@@ -157,8 +157,9 @@ const siteData = {
    ※stats の中の「現役部員」は、playersData（選手・マネージャーの合計人数）から
      自動で計算されるので、手入力の必要はありません
    ※「所属」とヒーローの写真は、下の「その他」スプレッドシート
-     （sheetsSyncConfig.settingsCsvUrl）でも変更できます。ただしスプレッドシートでは
-     1枚しか指定できないので、スライドショーにしたい場合はここを配列にしてください
+     （sheetsSyncConfig.settingsCsvUrl）でも変更できます。スプレッドシートの
+     セル内でAlt+Enterで改行すれば、複数枚指定して自動スライドショーにできます
+     （このdata.js側と同じく、1行なら1枚、複数行なら複数枚として扱われます）
    ------------------------------------------------------------------------- */
 const heroData = {
   eyebrow: "TOKUSHIMA BUNRI UNIV. SOCCER CLUB",

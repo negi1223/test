@@ -43,8 +43,8 @@
    ------------------------------------------------------------------------- */
 const sheetsSyncConfig = {
   // 更新頻度が高いもの（Googleフォーム経由）
-  newsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTWUJmUrO-zjJTRx_-hEenJ_wW028Us_k8UEvjPSbzxpwLR_tgIG0NHK4FDM5npFfz4d-aIzcXkyoBY/pub?output=csv",
-  scheduleCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwa4U__S9rmKoTSKPCdfhdd_OAUhcZ9uoP03ZAa378oeWz2MhmypaNOK0s0Hp6lkoPYL_vb3wRYq6x/pub?output=csv",
+  newsCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=143287817&single=true&output=csv",
+  scheduleCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSOz2dky2NJJZRwolzgrwJ4URcbnY8KPY3WwHtPPZyT7tBORmlv-lwaLBKR8mApxroYPcXTB3DNgwUT/pub?gid=263763355&single=true&output=csv",
 
   // 更新頻度が低いもの（Googleフォームは経由せず、スプレッドシートを直接編集する）
   // 空欄（""）のままなら、今まで通り下の playersData / staffData / sponsorsData が使われます。

@@ -458,7 +458,14 @@
         return;
       }
 
-      // 1-3. 「News」「Schedule」「Members」「Q&A」「Sponsors」＋かぎカッコの形は、
+      // 1-3. 「Membersの「集合写真」」は、スマホ版トップページのMembersサマリー写真として使う
+      //      （membersExtrasの補足カードには出さない）
+      if (bracketMatch && includesLoose(label, "Members") && bracketMatch[1].includes("集合写真")) {
+        result.membersGroupPhoto = resolveImagePath(value);
+        return;
+      }
+
+      // 1-4. 「News」「Schedule」「Members」「Q&A」「Sponsors」＋かぎカッコの形は、
       //      そのセクションの補足カードとして自動的に追加する
       if (bracketMatch) {
         const sectionMatch = SECTION_EXTRA_PREFIXES.find(([, kws]) => kws.some((k) => includesLoose(label, k)));

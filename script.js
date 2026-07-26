@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (membersSummaryCountEl) membersSummaryCountEl.textContent = `現在 ${totalMemberCount}名 で活動しています`;
   const membersSummaryPhotoEl = document.getElementById('membersSummaryPhoto');
   if (membersSummaryPhotoEl) {
-    const summaryPhotoRaw = (typeof membersSummary !== 'undefined' && membersSummary.photo) || settings.heroPhoto || (typeof heroData !== 'undefined' ? heroData.photo : '');
+    const summaryPhotoRaw = settings.membersGroupPhoto || (typeof membersSummary !== 'undefined' && membersSummary.photo) || settings.heroPhoto || (typeof heroData !== 'undefined' ? heroData.photo : '');
     const summaryPhoto = Array.isArray(summaryPhotoRaw) ? summaryPhotoRaw[0] : summaryPhotoRaw;
     if (summaryPhoto) {
       membersSummaryPhotoEl.src = summaryPhoto;

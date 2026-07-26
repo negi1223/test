@@ -1,1 +1,0 @@
-permission check - safe to delete

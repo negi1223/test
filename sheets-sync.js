@@ -22,7 +22,12 @@
    ========================================================================= */
 
 (function () {
-  const FETCH_TIMEOUT_MS = 9000;
+  // 実測では、公開CSVの取得は通常1.0〜1.4秒程度で完了する（2026年時点の計測）。
+  // 4秒はその約3倍の余裕を持たせた値。これにより、通信が詰まった最悪ケースでも
+  // 「タイムアウト4秒 + リトライ待機0.4秒 + 2回目タイムアウト4秒」=最大8.4秒で
+  // 必ずdata.jsのフォールバックに切り替わる（以前は最大18.7秒かかっていた）。
+  // 通常時の体感速度には影響しない。
+  const FETCH_TIMEOUT_MS = 4000;
   // 通信自体の安全上限（万一シートに大量の行があっても処理が重くならないための保険）。
   // 実際に表示する件数は sheetsSyncConfig.newsMaxItems / currentSeason で決まります。
   const SAFETY_MAX_ROWS = 100;
@@ -121,7 +126,7 @@
     try {
       return await fetchWithTimeout(url);
     } catch (err) {
-      await wait(700);
+      await wait(400);
       return await fetchWithTimeout(url);
     }
   }

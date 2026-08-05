@@ -36,6 +36,28 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+
+<!-- 構造化データ（JSON-LD）：検索エンジンに「この団体は何者か」を直接伝えるための情報。
+     見た目には影響しない。SNSリンク等が変わった場合はここも合わせて更新してください。 -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SportsTeam",
+  "name": "徳島文理大学男子サッカー部",
+  "alternateName": "BUNRI UNIV. SOCCER CLUB",
+  "url": "https://test-clubsoceer.netlify.app/",
+  "logo": "https://test-clubsoceer.netlify.app/images/logo.jpg",
+  "sport": "https://en.wikipedia.org/wiki/Association_football",
+  "memberOf": {
+    "@type": "SportsOrganization",
+    "name": "四国大学サッカーリーグ"
+  },
+  "sameAs": [
+    "https://www.instagram.com/bunri.uni",
+    "https://x.com/bunri_univ"
+  ]
+}
+</script>
 </head>
 <body>
 

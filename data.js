@@ -211,7 +211,7 @@ const heroData = {
   headlineAccent: "日本一",
   headlineSuffix: "という景色へ。",
   sub: "2025年シーズンより四国大学サッカーリーグ2部に参戦。部員不足の時代を乗り越え、サッカーに打ち込みたい仲間が少しずつ集まっています。選手はもちろん、マネージャー・運営・審判に興味のある方も大歓迎です。",
-  photo: "images/hero.jpg",
+  photo: ["images/top.webp", "images/top1.webp", "images/top2.webp"],
   photoAlt: "活動中の様子",
   stats: [
     { label: "設立リーグ参戦", value: "2025", suffix: "年〜" },
@@ -455,9 +455,9 @@ const scheduleData = [
        自動的に "images/kaneko.jpg" として扱われます）
    ------------------------------------------------------------------------- */
 const staffData = [
-  { role: "監督",        name: "金子 憲一", comment: "審判・運営・マネージャーなど、サッカーに関わりたい人なら誰でも歓迎する方針でチームを率いています。", photo: "images/kaneko.jpg" },
-  { role: "コーチ",      name: "池田 隼",   comment: "技術と戦術の両面から選手一人ひとりの成長をサポートします。", photo: "images/ikeda.jpg" },
-  { role: "GK学生コーチ", name: "小泉 洋翔", comment: "2026年に就任。ゴールキーパー陣の強化を担当しています。", photo: "images/koizumi.jpg" }
+  { role: "監督",        name: "金子 憲一", comment: "審判・運営・マネージャーなど、サッカーに関わりたい人なら誰でも歓迎する方針でチームを率いています。", photo: "images/kaneko.webp" },
+  { role: "コーチ",      name: "池田 隼",   comment: "技術と戦術の両面から選手一人ひとりの成長をサポートします。", photo: "images/ikeda.webp" },
+  { role: "GK学生コーチ", name: "小泉 洋翔", comment: "2026年に就任。ゴールキーパー陣の強化を担当しています。", photo: "images/koizumi.webp" }
 ];
 
 
@@ -503,27 +503,27 @@ const staffData = [
        という文字さえ含まれていれば認識されます
    ------------------------------------------------------------------------- */
 const playersData = [
-  { name: "萩原 一貴", initial: "萩", grade: "4年", role: "4年生", sub: "出身：板野高校", photo: "images/ogiwara.jpg" },
-  { name: "藤家 賢人", initial: "藤", grade: "4年", role: "4年生", sub: "出身：新田高校", photo: "images/hujiya.jpg" },
+  { name: "萩原 一貴", initial: "萩", grade: "4年", role: "4年生", sub: "出身：板野高校", photo: "images/hagiwara.webp" },
+  { name: "藤家 賢人", initial: "藤", grade: "4年", role: "4年生", sub: "出身：新田高校", photo: "images/hujiya.webp" },
 
-  { name: "小川 浬",   initial: "小", grade: "3年", role: "3年生", sub: "出身：小松島高校", photo: "images/ogawa-3.jpg" },
-  { name: "奥本 修也", initial: "奥", grade: "3年", role: "3年生", sub: "出身：川島高校", photo: "images/okumoto.jpg" },
-  { name: "竹中 世成", initial: "竹", grade: "3年", role: "3年生", sub: "出身：徳島商業高校", photo: "images/takenaka-3.jpg" },
-  { name: "中西 拓海", initial: "中", grade: "3年", role: "3年生", sub: "出身：坂出商業高校", photo: "images/nakanishi.jpg" },
-  { name: "三好 龍之介", initial: "三", grade: "3年", role: "3年生", sub: "出身：徳島商業高校", photo: "images/miyoshi.jpg" },
+  { name: "小川 浬",   initial: "小", grade: "3年", role: "3年生", sub: "出身：小松島高校", photo: "images/ogawa-3.webp" },
+  { name: "奥本 修也", initial: "奥", grade: "3年", role: "3年生", sub: "出身：川島高校", photo: "images/okumoto.webp" },
+  { name: "竹中 世成", initial: "竹", grade: "3年", role: "3年生", sub: "出身：徳島商業高校", photo: "images/takenaka-3.webp" },
+  { name: "中西 拓海", initial: "中", grade: "3年", role: "3年生", sub: "出身：坂出商業高校", photo: "images/nakanishi.webp" },
+  { name: "三好 龍之介", initial: "三", grade: "3年", role: "3年生", sub: "出身：徳島商業高校", photo: "images/miyoshi.webp" },
 
-  { name: "井上 賢太朗", initial: "井", grade: "1年", role: "1年生", sub: "出身：今治東中等教育学校", photo: "images/inoue.jpg" },
-  { name: "小川 龍輝", initial: "小", grade: "1年", role: "1年生", sub: "出身：高知中央高校", photo: "images/ogawa.jpg" },
-  { name: "岸 琉輝",   initial: "岸", grade: "1年", role: "1年生", sub: "出身：新田高校", photo: "images/kishi.jpg" },
-  { name: "河野 結仁", initial: "河", grade: "1年", role: "1年生", sub: "出身：今治東中等教育学校", photo: "images/kawano.jpg" },
-  { name: "酒井 勇輝", initial: "酒", grade: "1年", role: "1年生", sub: "出身：益田東高校", photo: "images/sakai.jpg" },
-  { name: "笹村 時空", initial: "笹", grade: "1年", role: "1年生", sub: "出身：中村高校", photo: "images/sasamura.jpg" },
-  { name: "鈴木 大夢", initial: "鈴", grade: "1年", role: "1年生", sub: "出身：今治東中等教育学校", photo: "images/suzuki.jpg" },
-  { name: "竹中 琉歌", initial: "竹", grade: "1年", role: "1年生", sub: "出身：相生学院高校", photo: "images/takenaka.jpg" },
-  { name: "中野 時哉", initial: "中", grade: "1年", role: "1年生", sub: "出身：鹿児島実業高校", photo: "images/nakano.jpg" },
-  { name: "西山 愛輝", initial: "西", grade: "1年", role: "1年生", sub: "出身：明徳義塾高校", photo: "images/nishiyama.jpg" },
-  { name: "福田 大喜", initial: "福", grade: "1年", role: "1年生", sub: "出身：徳島科学技術高校", photo: "images/hukuda.jpg" },
-  { name: "二塚 結人", initial: "二", grade: "1年", role: "1年生", sub: "出身：高松東高校", photo: "images/niduka.jpg" },
+  { name: "井上 賢太朗", initial: "井", grade: "1年", role: "1年生", sub: "出身：今治東中等教育学校", photo: "images/inoue.webp" },
+  { name: "小川 龍輝", initial: "小", grade: "1年", role: "1年生", sub: "出身：高知中央高校", photo: "images/ogawa.webp" },
+  { name: "岸 琉輝",   initial: "岸", grade: "1年", role: "1年生", sub: "出身：新田高校", photo: "images/kishi.webp" },
+  { name: "河野 結仁", initial: "河", grade: "1年", role: "1年生", sub: "出身：今治東中等教育学校", photo: "images/kawano.webp" },
+  { name: "酒井 勇輝", initial: "酒", grade: "1年", role: "1年生", sub: "出身：益田東高校", photo: "images/sakai.webp" },
+  { name: "笹村 時空", initial: "笹", grade: "1年", role: "1年生", sub: "出身：中村高校", photo: "images/sasamura.webp" },
+  { name: "鈴木 大夢", initial: "鈴", grade: "1年", role: "1年生", sub: "出身：今治東中等教育学校", photo: "images/suzuki.webp" },
+  { name: "竹中 琉歌", initial: "竹", grade: "1年", role: "1年生", sub: "出身：相生学院高校", photo: "images/takenaka.webp" },
+  { name: "中野 時哉", initial: "中", grade: "1年", role: "1年生", sub: "出身：鹿児島実業高校", photo: "images/nakano.webp" },
+  { name: "西山 愛輝", initial: "西", grade: "1年", role: "1年生", sub: "出身：明徳義塾高校", photo: "images/nishiyama.webp" },
+  { name: "福田 大喜", initial: "福", grade: "1年", role: "1年生", sub: "出身：徳島科学技術高校", photo: "images/hukuta.webp" },
+  { name: "二塚 結人", initial: "二", grade: "1年", role: "1年生", sub: "出身：高松東高校", photo: "images/hutazuka.webp" },
   { name: "松尾 瑞希", initial: "松", grade: "1年", role: "1年生", sub: "出身：高松北高校" },
   // ↑ 松尾選手は現時点で写真データが無いため未設定です（届き次第 photo を追加してください）
 

@@ -13,22 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await window.loadSheetsData();
   }
 
-  const escapeHtml = (str = '') =>
-    String(str).replace(/[&<>"']/g, (c) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-
-  // 「補足」欄にURLだけが入力されていたら、クリックできるリンクに変換する（script.jsと同じロジック）
-  const renderNoteContent = (note) => {
-    const trimmed = String(note || '').trim();
-    if (!trimmed) return '';
-    if (/^https?:\/\//i.test(trimmed)) {
-      const isMapUrl = /google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps/i.test(trimmed);
-      const label = isMapUrl ? 'Googleマップで見る →' : '詳しく見る →';
-      return `<a href="${escapeHtml(trimmed)}" target="_blank" rel="noopener">${label}</a>`;
-    }
-    return escapeHtml(trimmed);
-  };
+  // escapeHtml / renderNoteContent は common.js を使う
 
   const cfg = (typeof sheetsSyncConfig !== 'undefined') ? sheetsSyncConfig : {};
   const settings = window.__syncedSettings || {};
@@ -53,19 +38,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const playerGrid = document.getElementById('pagePlayerGrid');
   const filterEmpty = document.getElementById('pageFilterEmpty');
   const rawPlayersData = window.__syncedPlayersData || (typeof playersData !== 'undefined' ? playersData : []);
-  // 入力された順番がバラバラでも、学年順（4年→3年→2年→1年→スタッフ）に並べる
-  // 入力された順番がバラバラでも、学年順（4年→3年→2年→1年→スタッフ）に並べる。
-  // 同じ学年の中の並び順は、スプレッドシート（またはdata.js）に入力された順番が
-  // そのまま使われる（あいうえお順にしたい場合は、シート側で行を並び替えてください）
-  const gradeOrder = { '4年': 0, '3年': 1, '2年': 2, '1年': 3, 'スタッフ': 4 };
-  const effectivePlayersData = [...rawPlayersData].sort((a, b) => {
-    const ra = gradeOrder[a.grade] ?? 99;
-    const rb = gradeOrder[b.grade] ?? 99;
-    return ra - rb;
-  });
+  const effectivePlayersData = sortByGrade(rawPlayersData); // common.js
   if (playerGrid) {
     playerGrid.innerHTML = effectivePlayersData.map((p) => `
-      <article class="player-card${p.isStaff ? ' player-card--staff' : ''}" data-grade="${escapeHtml(p.grade)}">
+      <article class="player-card${p.isStaff ? ' player-card--staff' : ''}" data-filter-key="${escapeHtml(p.isStaff ? p.role : p.grade)}">
         <div class="player-photo">
           ${p.photo
             ? `<img src="${escapeHtml(p.photo)}" alt="${escapeHtml(p.name)}" class="player-photo-img" loading="lazy">`
@@ -97,18 +73,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* --- 学年フィルター ＋ キーワード検索（名前・出身校など） --- */
-  const filterButtons = document.querySelectorAll('.filter-btn');
+  const filterBar = document.getElementById('filterBar');
+
+  // スタッフの役職ボタンは、スプレッドシートの「役職」列に入力された文字ごとに
+  // 自動生成する（初めて出てきた順番でボタンが並ぶ）
+  if (filterBar) {
+    const staffRoles = [];
+    rawPlayersData.forEach((p) => {
+      if (p.isStaff && p.role && !staffRoles.includes(p.role)) staffRoles.push(p.role);
+    });
+    filterBar.insertAdjacentHTML('beforeend', staffRoles.map((role) =>
+      `<button class="filter-btn" data-filter="${escapeHtml(role)}">${escapeHtml(role)}</button>`
+    ).join(''));
+  }
+
   const cards = document.querySelectorAll('#pagePlayerGrid .player-card');
   const searchInput = document.getElementById('membersSearchInput');
 
   const applyFilters = () => {
-    const activeBtn = document.querySelector('.filter-btn.is-active');
+    const activeBtn = filterBar ? filterBar.querySelector('.filter-btn.is-active') : null;
     const target = activeBtn ? activeBtn.dataset.filter : 'all';
     const query = (searchInput?.value || '').trim().toLowerCase();
     let visibleCount = 0;
 
     cards.forEach((card) => {
-      const matchesGrade = target === 'all' || card.dataset.grade === target;
+      const matchesGrade = target === 'all' || card.dataset.filterKey === target;
       // 名前・学年・出身校など、カードに表示されている全文字から検索する
       const matchesSearch = !query || card.textContent.toLowerCase().includes(query);
       const matches = matchesGrade && matchesSearch;
@@ -119,13 +108,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (filterEmpty) filterEmpty.hidden = visibleCount !== 0;
   };
 
-  filterButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      filterButtons.forEach((b) => b.classList.remove('is-active'));
+  // ボタンは動的に増えるため、フィルターバー全体へのイベント委譲で処理する
+  if (filterBar) {
+    filterBar.addEventListener('click', (event) => {
+      const btn = event.target.closest('.filter-btn');
+      if (!btn) return;
+      filterBar.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('is-active'));
       btn.classList.add('is-active');
       applyFilters();
     });
-  });
+  }
 
   if (searchInput) {
     searchInput.addEventListener('input', applyFilters);

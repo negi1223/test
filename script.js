@@ -30,38 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ? window.loadSheetsData()
     : Promise.resolve();
 
-  const escapeHtml = (str = '') =>
-    String(str).replace(/[&<>"']/g, (c) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-
-  // 「補足」欄（fact-card の note）にURLだけが入力されていたら、テキストのまま出さずに
-  // クリックできるリンクに変換する。Googleマップのリンクだと分かる場合は
-  // 「Googleマップで見る →」、それ以外のURLは「詳しく見る →」というボタン文字にする
-  // （News/Schedule/Members/Q&A/Sponsors/About、どの「その他」欄でも共通で使える）
-  const renderNoteContent = (note) => {
-    const trimmed = String(note || '').trim();
-    if (!trimmed) return '';
-    if (/^https?:\/\//i.test(trimmed)) {
-      const isMapUrl = /google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps/i.test(trimmed);
-      const label = isMapUrl ? 'Googleマップで見る →' : '詳しく見る →';
-      return `<a href="${escapeHtml(trimmed)}" target="_blank" rel="noopener">${label}</a>`;
-    }
-    return escapeHtml(trimmed);
-  };
-
-  // ニュース1件ごとの「日付＋タイトル」から、ページをまたいでも同じ値になる
-  // 識別子（slug）を作る。news.html側の該当ニュースへリンクするために使う
-  // （※news.htmlは全件、ホームは最新分のみの表示なので、単純な配列の番号では
-  //   同じニュースでもページによって番号がズレてしまうため）
-  const newsItemSlug = (item) => {
-    const raw = `${item.date}__${item.title}`;
-    let hash = 0;
-    for (let i = 0; i < raw.length; i++) {
-      hash = (hash * 31 + raw.charCodeAt(i)) | 0;
-    }
-    return 'n' + Math.abs(hash).toString(36);
-  };
+  // escapeHtml / renderNoteContent / newsItemSlug は common.js（先に読み込み済み）を使う
 
   /* =========================================================
      ロゴをクリックしたら一番上へスクロール
@@ -403,30 +372,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settingsSyncWarning = document.getElementById('settingsSyncWarning');
   if (settingsSyncWarning) settingsSyncWarning.hidden = !(window.__settingsSyncFailed && cfg.settingsCsvUrl);
 
-  // "2026.06.01" "2026/6/1" "2026-06-01"（年が先）と
-  // "6/1/2026"（Googleフォームの日付質問が月-日-年の順で出力する場合）の
-  // どちらの並びでも読み取れるようにする。"後期日程" のような日付以外の文字列は null を返す
-  const extractYMD = (str) => {
-    const s = String(str || '').trim();
-    let m = s.match(/(\d{4})[.\/\-](\d{1,2})[.\/\-](\d{1,2})/); // 年が先
-    if (m) return { y: Number(m[1]), mo: Number(m[2]), d: Number(m[3]) };
-    m = s.match(/(\d{1,2})[.\/\-](\d{1,2})[.\/\-](\d{4})/); // 月/日/年の順
-    if (m) return { y: Number(m[3]), mo: Number(m[1]), d: Number(m[2]) };
-    return null;
-  };
-  const parseDateValue = (str) => {
-    const ymd = extractYMD(str);
-    return ymd ? ymd.y * 10000 + ymd.mo * 100 + ymd.d : null;
-  };
-
-  // 日付から「年度」を自動計算する（4月1日～翌年3月31日を1年度とする学校年度のルール）。
-  // 例：2026.04.01～2027.03.31 はすべて「2026年度」
-  // これにより、試合結果フォームで「年度」を毎回入力してもらう必要がなくなる
-  const deriveSeason = (str) => {
-    const ymd = extractYMD(str);
-    if (!ymd) return '';
-    return String(ymd.mo >= 4 ? ymd.y : ymd.y - 1);
-  };
+  // extractYMD / parseDateValue / deriveSeason は common.js を使う
 
   // 「今」が何年度かも自動計算する。sheetsSyncConfig.currentSeason に何か
   // 入力されていればそちらを優先する（先取りで来年度の日程を見せたい時などに使える）。
@@ -494,31 +440,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const scheduleBody = document.getElementById('scheduleBody');
   if (scheduleBody) {
-    const renderResult = (result) => {
-      if (result.type === 'link') {
-        return `<a class="badge badge-link" href="${escapeHtml(result.url)}" target="_blank" rel="noopener">${escapeHtml(result.label)}</a>`;
-      }
-      if (result.type === 'score') {
-        const badgeClass = result.win === true ? 'badge-win' : result.win === false ? 'badge-lose' : 'badge-draw';
-        return `<span class="badge ${badgeClass}">${escapeHtml(result.text)}</span>`;
-      }
-      return `<span class="badge badge-pending">${escapeHtml(result.text)}</span>`;
-    };
-
-    // HOME/AWAYバッジ、キックオフ時刻・会場を対戦相手のセルにまとめて表示する
-    const renderOpponent = (row) => {
-      const haClass = row.homeAway === 'HOME' ? 'ha-home' : row.homeAway === 'AWAY' ? 'ha-away' : '';
-      const haBadge = row.homeAway ? `<span class="ha-badge ${haClass}">${escapeHtml(row.homeAway)}</span>` : '';
-      const subParts = [];
-      // Googleフォームの時刻質問は "14:00:00" のように秒まで出力するので、
-      // "時:分" の部分だけを取り出して表示する（例："14:00"）
-      const timeMatch = String(row.kickoffTime || '').match(/^\d{1,2}:\d{2}/);
-      const kickoffShort = timeMatch ? timeMatch[0] : row.kickoffTime;
-      if (kickoffShort) subParts.push(`${escapeHtml(kickoffShort)} KICK OFF`);
-      if (row.venue) subParts.push(escapeHtml(row.venue));
-      const sub = subParts.length ? `<span class="opponent-sub">${subParts.join(' ・ ')}</span>` : '';
-      return `${haBadge}<span class="opponent-name">${escapeHtml(row.opponent)}</span>${sub}`;
-    };
+    // renderResult / renderOpponent は common.js を使う
 
     // 今日以降で最初に来る試合の行を探す（そこの上の罫線だけ目立たせて、
     // 「ここから上が消化済み、ここから下がこれから」を視覚的に分かるようにする）
@@ -601,12 +523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 入力された順番がバラバラでも、学年順（4年→3年→2年→1年→スタッフ）に並べる。
   // 同じ学年の中の並び順は、スプレッドシート（またはdata.js）に入力された順番が
   // そのまま使われる（あいうえお順にしたい場合は、シート側で行を並び替えてください）
-  const gradeOrder = { '4年': 0, '3年': 1, '2年': 2, '1年': 3, 'スタッフ': 4 };
-  const sortedPlayersData = [...rawPlayersData].sort((a, b) => {
-    const ra = gradeOrder[a.grade] ?? 99;
-    const rb = gradeOrder[b.grade] ?? 99;
-    return ra - rb;
-  });
+  const sortedPlayersData = sortByGrade(rawPlayersData); // common.js
 
   // 部員数が多くなった時、PCトップページでは表示件数に上限を設ける。
   // ただし単純に「上から◯人」だと、人数の多い学年（4年など）だけで
@@ -643,7 +560,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (playerGrid) {
     playerGrid.innerHTML = effectivePlayersData.map((p) => `
-      <article class="player-card${p.isStaff ? ' player-card--staff' : ''}" data-grade="${escapeHtml(p.grade)}">
+      <article class="player-card${p.isStaff ? ' player-card--staff' : ''}" data-filter-key="${escapeHtml(p.isStaff ? p.role : p.grade)}">
         <div class="player-photo">
           ${p.photo
             ? `<img src="${escapeHtml(p.photo)}" alt="${escapeHtml(p.name)}" class="player-photo-img" loading="lazy" data-fallback="${escapeHtml(`<span class="player-initial">${p.initial}</span>`)}" onerror="window.handleImgFallback(this)">`
@@ -757,11 +674,27 @@ document.addEventListener('DOMContentLoaded', async () => {
      選手・指導者紹介：フィルター機能
      （data.js のレンダリングより後に実行する必要があるためここに配置）
   ========================================================= */
-  const filterButtons = document.querySelectorAll('.filter-btn');
+  const filterBar = document.getElementById('filterBar');
 
-  filterButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      filterButtons.forEach((b) => b.classList.remove('is-active'));
+  // スタッフの役職ボタンは、スプレッドシートの「役職」列に入力された文字ごとに
+  // 自動生成する（初めて出てきた順番でボタンが並ぶ）
+  if (filterBar) {
+    const staffRoles = [];
+    rawPlayersData.forEach((p) => {
+      if (p.isStaff && p.role && !staffRoles.includes(p.role)) staffRoles.push(p.role);
+    });
+    filterBar.insertAdjacentHTML('beforeend', staffRoles.map((role) =>
+      `<button class="filter-btn" data-filter="${escapeHtml(role)}">${escapeHtml(role)}</button>`
+    ).join(''));
+  }
+
+  // ボタンは動的に増えるため、フィルターバー全体へのイベント委譲で処理する
+  if (filterBar) {
+    filterBar.addEventListener('click', (event) => {
+      const btn = event.target.closest('.filter-btn');
+      if (!btn) return;
+
+      filterBar.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('is-active'));
       btn.classList.add('is-active');
 
       const target = btn.dataset.filter;
@@ -769,13 +702,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const cards = document.querySelectorAll('.player-card');
 
       cards.forEach((card) => {
-        const matches = target === 'all' || card.dataset.grade === target;
+        const matches = target === 'all' || card.dataset.filterKey === target;
         card.classList.toggle('is-hidden', !matches);
         if (matches) visibleCount += 1;
       });
 
       if (filterEmpty) filterEmpty.hidden = visibleCount !== 0;
     });
-  });
+  }
 
 });

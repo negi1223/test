@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -11,6 +11,8 @@
 </script>
 <title>部員紹介 | 徳島文理大学男子サッカー部</title>
 <meta name="description" content="徳島文理大学男子サッカー部の選手・監督・コーチ紹介です。">
+<link rel="canonical" href="https://tbu-soccerclub.netlify.app/members.html">
+<meta property="og:locale" content="ja_JP">
 
 <link rel="icon" href="images/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
@@ -22,14 +24,24 @@
 <meta property="og:site_name" content="徳島文理大学男子サッカー部">
 <meta property="og:title" content="部員紹介 | 徳島文理大学男子サッカー部">
 <meta property="og:description" content="徳島文理大学男子サッカー部の選手・監督・コーチ紹介です。">
-<meta property="og:url" content="https://test-clubsoceer.netlify.app/members.html">
-<meta property="og:image" content="https://test-clubsoceer.netlify.app/images/ogp.jpg">
+<meta property="og:url" content="https://tbu-soccerclub.netlify.app/members.html">
+<meta property="og:image" content="https://tbu-soccerclub.netlify.app/images/ogp.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
-</head>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "ホーム", "item": "https://tbu-soccerclub.netlify.app/" },
+    { "@type": "ListItem", "position": 2, "name": "部員紹介", "item": "https://tbu-soccerclub.netlify.app/members.html" }
+  ]
+}
+</script></head>
 <body>
 
 <a class="skip-link" href="#main">本文へスキップ</a>
@@ -85,13 +97,14 @@
       <div class="search-bar">
         <input type="search" id="membersSearchInput" class="search-input" placeholder="名前・出身校で検索" aria-label="部員を名前や出身校で検索">
       </div>
-      <div class="filter-bar" role="group" aria-label="選手フィルター">
+      <div class="filter-bar" role="group" aria-label="選手フィルター" id="filterBar">
         <button class="filter-btn is-active" data-filter="all">全員</button>
         <button class="filter-btn" data-filter="4年">4年生</button>
         <button class="filter-btn" data-filter="3年">3年生</button>
         <button class="filter-btn" data-filter="2年">2年生</button>
         <button class="filter-btn" data-filter="1年">1年生</button>
-        <button class="filter-btn" data-filter="スタッフ">スタッフ</button>
+        <!-- スタッフの役職ボタンは、スプレッドシートの「役職」列に入力された
+             文字ごとに members-archive.js が自動で生成してここに追加します -->
       </div>
 
       <div class="player-grid" id="pagePlayerGrid">
@@ -130,6 +143,7 @@
 </footer>
 
 <script src="data.js"></script>
+<script src="common.js"></script>
 <script src="sheets-sync.js"></script>
 <script src="script.js"></script>
 <script src="members-archive.js"></script>

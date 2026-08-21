@@ -69,7 +69,7 @@
 
   const PLAYER_KEYWORDS = [
     ["photo", "写真"],
-    ["isStaffRaw", "マネージャー"],
+    ["roleRaw", "役職"],
     ["sub", "出身"],
     ["grade", "学年"],
     ["name", "名前"]
@@ -319,9 +319,9 @@
     const cols = resolveColumns(headers, PLAYER_KEYWORDS);
     return objects
       .map((o) => {
-        const isStaffRaw = getVal(o, cols, "isStaffRaw");
-        // 「はい」「Yes」「する」などを true として扱う（空欄・「いいえ」は false）
-        const isStaff = /はい|yes|true|する/i.test(isStaffRaw) && !/いいえ|no|しない/i.test(isStaffRaw);
+        // 役職が入力されていれば（選手以外の）スタッフ扱い。空欄なら選手扱い
+        const roleRaw = getVal(o, cols, "roleRaw").trim();
+        const isStaff = !!roleRaw;
 
         const name = getVal(o, cols, "name");
         const initial = name.charAt(0); // イニシャルは常に名前の1文字目
@@ -336,9 +336,10 @@
 
         let grade, role, sub;
         if (isStaff) {
-          // マネージャーの場合は、学年・出身校の入力があっても無視する
+          // 役職入力ありの場合は、学年・出身校の入力があっても無視し、
+          // 入力された役職名をそのまま表示する
           grade = "スタッフ";
-          role = "マネージャー";
+          role = roleRaw;
           sub = "";
         } else {
           grade = gradeNum ? `${gradeNum}年` : "";
